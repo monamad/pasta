@@ -6,9 +6,15 @@ import 'package:pasta/core/theme/app_style.dart';
 
 class CountTimer extends StatefulWidget {
   final int sessionId;
-  final int minutes;
+  final DateTime startedAt;
+  final DateTime? expectedEndTime;
 
-  const CountTimer({super.key, required this.sessionId, required this.minutes});
+  const CountTimer({
+    super.key,
+    required this.sessionId,
+    required this.startedAt,
+    required this.expectedEndTime,
+  });
   @override
   State<CountTimer> createState() => _CountTimerState();
 }
@@ -16,31 +22,33 @@ class CountTimer extends StatefulWidget {
 class _CountTimerState extends State<CountTimer> {
   late int totalSeconds;
   Timer? timer;
+  late bool isCountDown;
 
   @override
   void initState() {
     super.initState();
-    totalSeconds = widget.minutes * 60;
+    totalSeconds = widget.expectedEndTime != null
+        ? widget.expectedEndTime!.difference(DateTime.now()).inSeconds
+        : DateTime.now().difference(widget.startedAt).inSeconds;
+    isCountDown = widget.expectedEndTime != null;
     startTimer();
   }
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (totalSeconds == 0) {
-        setState(() {
-          totalSeconds = -1;
-        });
-        t.cancel();
-      } else {
-        if (widget.minutes != 0) {
-          setState(() {
-            totalSeconds--;
-          });
-        } else {
-          setState(() {
-            totalSeconds++;
-          });
+      if (isCountDown) {
+        if (totalSeconds == -1) {
+          timer?.cancel();
+          context.read<HomeCubit>().stopSession(widget.sessionId);
+          return;
         }
+        setState(() {
+          totalSeconds--;
+        });
+      } else {
+        setState(() {
+          totalSeconds++;
+        });
       }
     });
   }
@@ -57,9 +65,6 @@ class _CountTimerState extends State<CountTimer> {
 
   @override
   Widget build(BuildContext context) {
-    if (totalSeconds == 0) {
-      context.read<HomeCubit>().stopSession(widget.sessionId);
-    }
     return Text(formatTime(totalSeconds), style: AppTextStyles.bold16);
   }
 

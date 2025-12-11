@@ -13,7 +13,7 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
   ValueNotifier<int?> selectedTableId = ValueNotifier(null);
   ValueNotifier<TimeOfDay> startTime = ValueNotifier(TimeOfDay.now());
   ValueNotifier<SessionType> sessionType = ValueNotifier(SessionType.hourly);
-  ValueNotifier<int> duration = ValueNotifier(1);
+  ValueNotifier<double> duration = ValueNotifier(1.0);
 
   StartNewSessionCubit(this._tableRepository, this._sessionRepository)
     : super(StartNewSessionInitial());
@@ -33,12 +33,11 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
     if (state is! StartNewSessionDataLoaded) return;
     final availableTables =
         (state as StartNewSessionDataLoaded).availableTables;
-    emit(StartNewSessionLoading());
     try {
       await _sessionRepository.startSession(
         tableId: selectedTableId.value!,
-        durationMinutes: sessionType.value == SessionType.hourly
-            ? duration.value * 60
+        durationHours: sessionType.value == SessionType.hourly
+            ? duration.value
             : null,
         startTime: DateTime(
           DateTime.now().year,
@@ -46,6 +45,7 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
           DateTime.now().day,
           startTime.value.hour,
           startTime.value.minute,
+          DateTime.now().second,
         ),
       );
       emit(StartNewSessionSubmitted());

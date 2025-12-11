@@ -6,6 +6,8 @@ import 'package:pasta/app_feature/data/repos/session_repository.dart';
 import 'package:pasta/app_feature/data/repos/table_repository.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/app_feature/logic/start_new_session/start_new_session_cubit.dart';
+import 'package:pasta/app_feature/presentation/home/view/active_sessions_view.dart';
+import 'package:pasta/app_feature/presentation/home/view/done_sessions_section_view.dart';
 import 'package:pasta/app_feature/presentation/home/view/home_view.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/view/start_new_session_view.dart';
 import 'package:pasta/core/di/service_locator.dart';
@@ -38,7 +40,16 @@ class AppRouter {
             ),
           ),
         );
-
+      case Routes.activeSessions:
+        final homeCubit = settings.arguments as HomeCubit;
+        return MaterialPageRoute(
+          builder: (_) => ActiveSessionsView(homeCubit: homeCubit),
+        );
+      case Routes.doneSessionsView:
+        final homeCubit = settings.arguments as HomeCubit;
+        return MaterialPageRoute(
+          builder: (_) => DoneSessionsSectionView(homeCubit: homeCubit),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

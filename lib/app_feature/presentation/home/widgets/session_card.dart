@@ -8,7 +8,9 @@ import 'package:pasta/core/theme/app_style.dart';
 class SessionCard extends StatelessWidget {
   final int sessionId;
   final String title;
-  final String? duration;
+  final DateTime startTime;
+  final DateTime? expectedEndTime;
+
   final String category;
   final String status;
   final String price;
@@ -20,7 +22,8 @@ class SessionCard extends StatelessWidget {
 
     required this.sessionId,
     required this.title,
-    required this.duration,
+    required this.startTime,
+    required this.expectedEndTime,
     required this.category,
     required this.status,
     required this.price,
@@ -43,19 +46,35 @@ class SessionCard extends StatelessWidget {
                 Spacer(),
                 Column(
                   children: [
-                    CountTimer(
-                      minutes: duration != null
-                          ? int.parse(duration!.split(' ')[0])
-                          : 0,
-                      sessionId: sessionId,
-                    ),
+                    startTime.isBefore(DateTime.now())
+                        ? CountTimer(
+                            key: ValueKey(expectedEndTime),
+                            expectedEndTime: expectedEndTime,
+                            sessionId: sessionId,
+                            startedAt: startTime,
+                          )
+                        : Text(
+                            'Starts at ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}',
+                            style: AppTextStyles.bold14,
+                          ),
                     SizedBox(height: 4),
                     Text(
-                      duration != null ? 'Duration' : 'Open Session',
+                      expectedEndTime != null ? 'Duration' : 'Open Session',
                       style: AppTextStyles.regular12.copyWith(
                         color: AppColors.grayDeep,
                       ),
                     ),
+                    if (expectedEndTime != null &&
+                        startTime.isAfter(DateTime.now())) ...[
+                      SizedBox(height: 4),
+                      //showing duration
+                      Text(
+                        '${expectedEndTime!.difference(startTime).inMinutes / 60} hrs',
+                        style: AppTextStyles.regular12.copyWith(
+                          color: AppColors.grayDeep,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -98,17 +117,19 @@ class SessionCard extends StatelessWidget {
                   color: AppColors.pinkLight,
                   onTap: onStop,
                 ),
-                SizedBox(width: 10),
-                CustomButton(
-                  text: 'Extend',
-                  width: 80,
-                  height: 30,
-                  textStyle: AppTextStyles.semiBold14.copyWith(
-                    color: AppColors.primary,
+                if (expectedEndTime != null) ...[
+                  SizedBox(width: 10),
+                  CustomButton(
+                    text: 'Extend',
+                    width: 80,
+                    height: 30,
+                    textStyle: AppTextStyles.semiBold14.copyWith(
+                      color: AppColors.primary,
+                    ),
+                    color: AppColors.blueSoft,
+                    onTap: onExtend,
                   ),
-                  color: AppColors.blueSoft,
-                  onTap: onExtend,
-                ),
+                ],
               ],
             ),
           ],

@@ -42,7 +42,6 @@ class Category extends Table {
 class GameTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
-
   IntColumn get categoryId => integer().references(Category, #id)();
 }
 
@@ -54,10 +53,10 @@ class Session extends Table {
 
   DateTimeColumn get startTime => dateTime()();
 
-  DateTimeColumn get endTime => dateTime().nullable()();
+  DateTimeColumn get expectedEndTime => dateTime().nullable()();
+  DateTimeColumn get actualEndTime => dateTime().nullable()();
+  RealColumn get totalPrice => real().nullable()();
+  RealColumn get hourPrice => real()();
 
-  RealColumn get totalPrice => real().withDefault(const Constant(0.0))();
-
-  // (null = open/unlimited session)
-  IntColumn get durationMinutes => integer().nullable()();
+  BoolColumn get status => boolean().withDefault(const Constant(true))();
 }

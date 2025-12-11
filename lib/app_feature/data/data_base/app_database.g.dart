@@ -554,17 +554,30 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _endTimeMeta = const VerificationMeta(
-    'endTime',
+  static const VerificationMeta _expectedEndTimeMeta = const VerificationMeta(
+    'expectedEndTime',
   );
   @override
-  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
-    'end_time',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
+  late final GeneratedColumn<DateTime> expectedEndTime =
+      GeneratedColumn<DateTime>(
+        'expected_end_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _actualEndTimeMeta = const VerificationMeta(
+    'actualEndTime',
   );
+  @override
+  late final GeneratedColumn<DateTime> actualEndTime =
+      GeneratedColumn<DateTime>(
+        'actual_end_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _totalPriceMeta = const VerificationMeta(
     'totalPrice',
   );
@@ -572,30 +585,44 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
   late final GeneratedColumn<double> totalPrice = GeneratedColumn<double>(
     'total_price',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.double,
     requiredDuringInsert: false,
-    defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
-    'durationMinutes',
+  static const VerificationMeta _hourPriceMeta = const VerificationMeta(
+    'hourPrice',
   );
   @override
-  late final GeneratedColumn<int> durationMinutes = GeneratedColumn<int>(
-    'duration_minutes',
+  late final GeneratedColumn<double> hourPrice = GeneratedColumn<double>(
+    'hour_price',
     aliasedName,
-    true,
-    type: DriftSqlType.int,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<bool> status = GeneratedColumn<bool>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
     requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("status" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     tableId,
     startTime,
-    endTime,
+    expectedEndTime,
+    actualEndTime,
     totalPrice,
-    durationMinutes,
+    hourPrice,
+    status,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -628,10 +655,22 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
     } else if (isInserting) {
       context.missing(_startTimeMeta);
     }
-    if (data.containsKey('end_time')) {
+    if (data.containsKey('expected_end_time')) {
       context.handle(
-        _endTimeMeta,
-        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
+        _expectedEndTimeMeta,
+        expectedEndTime.isAcceptableOrUnknown(
+          data['expected_end_time']!,
+          _expectedEndTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actual_end_time')) {
+      context.handle(
+        _actualEndTimeMeta,
+        actualEndTime.isAcceptableOrUnknown(
+          data['actual_end_time']!,
+          _actualEndTimeMeta,
+        ),
       );
     }
     if (data.containsKey('total_price')) {
@@ -640,13 +679,18 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
         totalPrice.isAcceptableOrUnknown(data['total_price']!, _totalPriceMeta),
       );
     }
-    if (data.containsKey('duration_minutes')) {
+    if (data.containsKey('hour_price')) {
       context.handle(
-        _durationMinutesMeta,
-        durationMinutes.isAcceptableOrUnknown(
-          data['duration_minutes']!,
-          _durationMinutesMeta,
-        ),
+        _hourPriceMeta,
+        hourPrice.isAcceptableOrUnknown(data['hour_price']!, _hourPriceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_hourPriceMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
     return context;
@@ -670,18 +714,26 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_time'],
       )!,
-      endTime: attachedDatabase.typeMapping.read(
+      expectedEndTime: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
-        data['${effectivePrefix}end_time'],
+        data['${effectivePrefix}expected_end_time'],
+      ),
+      actualEndTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}actual_end_time'],
       ),
       totalPrice: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}total_price'],
-      )!,
-      durationMinutes: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_minutes'],
       ),
+      hourPrice: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}hour_price'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}status'],
+      )!,
     );
   }
 
@@ -695,16 +747,20 @@ class SessionData extends DataClass implements Insertable<SessionData> {
   final int id;
   final int tableId;
   final DateTime startTime;
-  final DateTime? endTime;
-  final double totalPrice;
-  final int? durationMinutes;
+  final DateTime? expectedEndTime;
+  final DateTime? actualEndTime;
+  final double? totalPrice;
+  final double hourPrice;
+  final bool status;
   const SessionData({
     required this.id,
     required this.tableId,
     required this.startTime,
-    this.endTime,
-    required this.totalPrice,
-    this.durationMinutes,
+    this.expectedEndTime,
+    this.actualEndTime,
+    this.totalPrice,
+    required this.hourPrice,
+    required this.status,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -712,13 +768,17 @@ class SessionData extends DataClass implements Insertable<SessionData> {
     map['id'] = Variable<int>(id);
     map['table_id'] = Variable<int>(tableId);
     map['start_time'] = Variable<DateTime>(startTime);
-    if (!nullToAbsent || endTime != null) {
-      map['end_time'] = Variable<DateTime>(endTime);
+    if (!nullToAbsent || expectedEndTime != null) {
+      map['expected_end_time'] = Variable<DateTime>(expectedEndTime);
     }
-    map['total_price'] = Variable<double>(totalPrice);
-    if (!nullToAbsent || durationMinutes != null) {
-      map['duration_minutes'] = Variable<int>(durationMinutes);
+    if (!nullToAbsent || actualEndTime != null) {
+      map['actual_end_time'] = Variable<DateTime>(actualEndTime);
     }
+    if (!nullToAbsent || totalPrice != null) {
+      map['total_price'] = Variable<double>(totalPrice);
+    }
+    map['hour_price'] = Variable<double>(hourPrice);
+    map['status'] = Variable<bool>(status);
     return map;
   }
 
@@ -727,13 +787,17 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       id: Value(id),
       tableId: Value(tableId),
       startTime: Value(startTime),
-      endTime: endTime == null && nullToAbsent
+      expectedEndTime: expectedEndTime == null && nullToAbsent
           ? const Value.absent()
-          : Value(endTime),
-      totalPrice: Value(totalPrice),
-      durationMinutes: durationMinutes == null && nullToAbsent
+          : Value(expectedEndTime),
+      actualEndTime: actualEndTime == null && nullToAbsent
           ? const Value.absent()
-          : Value(durationMinutes),
+          : Value(actualEndTime),
+      totalPrice: totalPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalPrice),
+      hourPrice: Value(hourPrice),
+      status: Value(status),
     );
   }
 
@@ -746,9 +810,11 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       id: serializer.fromJson<int>(json['id']),
       tableId: serializer.fromJson<int>(json['tableId']),
       startTime: serializer.fromJson<DateTime>(json['startTime']),
-      endTime: serializer.fromJson<DateTime?>(json['endTime']),
-      totalPrice: serializer.fromJson<double>(json['totalPrice']),
-      durationMinutes: serializer.fromJson<int?>(json['durationMinutes']),
+      expectedEndTime: serializer.fromJson<DateTime?>(json['expectedEndTime']),
+      actualEndTime: serializer.fromJson<DateTime?>(json['actualEndTime']),
+      totalPrice: serializer.fromJson<double?>(json['totalPrice']),
+      hourPrice: serializer.fromJson<double>(json['hourPrice']),
+      status: serializer.fromJson<bool>(json['status']),
     );
   }
   @override
@@ -758,9 +824,11 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       'id': serializer.toJson<int>(id),
       'tableId': serializer.toJson<int>(tableId),
       'startTime': serializer.toJson<DateTime>(startTime),
-      'endTime': serializer.toJson<DateTime?>(endTime),
-      'totalPrice': serializer.toJson<double>(totalPrice),
-      'durationMinutes': serializer.toJson<int?>(durationMinutes),
+      'expectedEndTime': serializer.toJson<DateTime?>(expectedEndTime),
+      'actualEndTime': serializer.toJson<DateTime?>(actualEndTime),
+      'totalPrice': serializer.toJson<double?>(totalPrice),
+      'hourPrice': serializer.toJson<double>(hourPrice),
+      'status': serializer.toJson<bool>(status),
     };
   }
 
@@ -768,31 +836,41 @@ class SessionData extends DataClass implements Insertable<SessionData> {
     int? id,
     int? tableId,
     DateTime? startTime,
-    Value<DateTime?> endTime = const Value.absent(),
-    double? totalPrice,
-    Value<int?> durationMinutes = const Value.absent(),
+    Value<DateTime?> expectedEndTime = const Value.absent(),
+    Value<DateTime?> actualEndTime = const Value.absent(),
+    Value<double?> totalPrice = const Value.absent(),
+    double? hourPrice,
+    bool? status,
   }) => SessionData(
     id: id ?? this.id,
     tableId: tableId ?? this.tableId,
     startTime: startTime ?? this.startTime,
-    endTime: endTime.present ? endTime.value : this.endTime,
-    totalPrice: totalPrice ?? this.totalPrice,
-    durationMinutes: durationMinutes.present
-        ? durationMinutes.value
-        : this.durationMinutes,
+    expectedEndTime: expectedEndTime.present
+        ? expectedEndTime.value
+        : this.expectedEndTime,
+    actualEndTime: actualEndTime.present
+        ? actualEndTime.value
+        : this.actualEndTime,
+    totalPrice: totalPrice.present ? totalPrice.value : this.totalPrice,
+    hourPrice: hourPrice ?? this.hourPrice,
+    status: status ?? this.status,
   );
   SessionData copyWithCompanion(SessionCompanion data) {
     return SessionData(
       id: data.id.present ? data.id.value : this.id,
       tableId: data.tableId.present ? data.tableId.value : this.tableId,
       startTime: data.startTime.present ? data.startTime.value : this.startTime,
-      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      expectedEndTime: data.expectedEndTime.present
+          ? data.expectedEndTime.value
+          : this.expectedEndTime,
+      actualEndTime: data.actualEndTime.present
+          ? data.actualEndTime.value
+          : this.actualEndTime,
       totalPrice: data.totalPrice.present
           ? data.totalPrice.value
           : this.totalPrice,
-      durationMinutes: data.durationMinutes.present
-          ? data.durationMinutes.value
-          : this.durationMinutes,
+      hourPrice: data.hourPrice.present ? data.hourPrice.value : this.hourPrice,
+      status: data.status.present ? data.status.value : this.status,
     );
   }
 
@@ -802,16 +880,26 @@ class SessionData extends DataClass implements Insertable<SessionData> {
           ..write('id: $id, ')
           ..write('tableId: $tableId, ')
           ..write('startTime: $startTime, ')
-          ..write('endTime: $endTime, ')
+          ..write('expectedEndTime: $expectedEndTime, ')
+          ..write('actualEndTime: $actualEndTime, ')
           ..write('totalPrice: $totalPrice, ')
-          ..write('durationMinutes: $durationMinutes')
+          ..write('hourPrice: $hourPrice, ')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, tableId, startTime, endTime, totalPrice, durationMinutes);
+  int get hashCode => Object.hash(
+    id,
+    tableId,
+    startTime,
+    expectedEndTime,
+    actualEndTime,
+    totalPrice,
+    hourPrice,
+    status,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -819,50 +907,63 @@ class SessionData extends DataClass implements Insertable<SessionData> {
           other.id == this.id &&
           other.tableId == this.tableId &&
           other.startTime == this.startTime &&
-          other.endTime == this.endTime &&
+          other.expectedEndTime == this.expectedEndTime &&
+          other.actualEndTime == this.actualEndTime &&
           other.totalPrice == this.totalPrice &&
-          other.durationMinutes == this.durationMinutes);
+          other.hourPrice == this.hourPrice &&
+          other.status == this.status);
 }
 
 class SessionCompanion extends UpdateCompanion<SessionData> {
   final Value<int> id;
   final Value<int> tableId;
   final Value<DateTime> startTime;
-  final Value<DateTime?> endTime;
-  final Value<double> totalPrice;
-  final Value<int?> durationMinutes;
+  final Value<DateTime?> expectedEndTime;
+  final Value<DateTime?> actualEndTime;
+  final Value<double?> totalPrice;
+  final Value<double> hourPrice;
+  final Value<bool> status;
   const SessionCompanion({
     this.id = const Value.absent(),
     this.tableId = const Value.absent(),
     this.startTime = const Value.absent(),
-    this.endTime = const Value.absent(),
+    this.expectedEndTime = const Value.absent(),
+    this.actualEndTime = const Value.absent(),
     this.totalPrice = const Value.absent(),
-    this.durationMinutes = const Value.absent(),
+    this.hourPrice = const Value.absent(),
+    this.status = const Value.absent(),
   });
   SessionCompanion.insert({
     this.id = const Value.absent(),
     required int tableId,
     required DateTime startTime,
-    this.endTime = const Value.absent(),
+    this.expectedEndTime = const Value.absent(),
+    this.actualEndTime = const Value.absent(),
     this.totalPrice = const Value.absent(),
-    this.durationMinutes = const Value.absent(),
+    required double hourPrice,
+    this.status = const Value.absent(),
   }) : tableId = Value(tableId),
-       startTime = Value(startTime);
+       startTime = Value(startTime),
+       hourPrice = Value(hourPrice);
   static Insertable<SessionData> custom({
     Expression<int>? id,
     Expression<int>? tableId,
     Expression<DateTime>? startTime,
-    Expression<DateTime>? endTime,
+    Expression<DateTime>? expectedEndTime,
+    Expression<DateTime>? actualEndTime,
     Expression<double>? totalPrice,
-    Expression<int>? durationMinutes,
+    Expression<double>? hourPrice,
+    Expression<bool>? status,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (tableId != null) 'table_id': tableId,
       if (startTime != null) 'start_time': startTime,
-      if (endTime != null) 'end_time': endTime,
+      if (expectedEndTime != null) 'expected_end_time': expectedEndTime,
+      if (actualEndTime != null) 'actual_end_time': actualEndTime,
       if (totalPrice != null) 'total_price': totalPrice,
-      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (hourPrice != null) 'hour_price': hourPrice,
+      if (status != null) 'status': status,
     });
   }
 
@@ -870,17 +971,21 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
     Value<int>? id,
     Value<int>? tableId,
     Value<DateTime>? startTime,
-    Value<DateTime?>? endTime,
-    Value<double>? totalPrice,
-    Value<int?>? durationMinutes,
+    Value<DateTime?>? expectedEndTime,
+    Value<DateTime?>? actualEndTime,
+    Value<double?>? totalPrice,
+    Value<double>? hourPrice,
+    Value<bool>? status,
   }) {
     return SessionCompanion(
       id: id ?? this.id,
       tableId: tableId ?? this.tableId,
       startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
+      expectedEndTime: expectedEndTime ?? this.expectedEndTime,
+      actualEndTime: actualEndTime ?? this.actualEndTime,
       totalPrice: totalPrice ?? this.totalPrice,
-      durationMinutes: durationMinutes ?? this.durationMinutes,
+      hourPrice: hourPrice ?? this.hourPrice,
+      status: status ?? this.status,
     );
   }
 
@@ -896,14 +1001,20 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
     if (startTime.present) {
       map['start_time'] = Variable<DateTime>(startTime.value);
     }
-    if (endTime.present) {
-      map['end_time'] = Variable<DateTime>(endTime.value);
+    if (expectedEndTime.present) {
+      map['expected_end_time'] = Variable<DateTime>(expectedEndTime.value);
+    }
+    if (actualEndTime.present) {
+      map['actual_end_time'] = Variable<DateTime>(actualEndTime.value);
     }
     if (totalPrice.present) {
       map['total_price'] = Variable<double>(totalPrice.value);
     }
-    if (durationMinutes.present) {
-      map['duration_minutes'] = Variable<int>(durationMinutes.value);
+    if (hourPrice.present) {
+      map['hour_price'] = Variable<double>(hourPrice.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<bool>(status.value);
     }
     return map;
   }
@@ -914,9 +1025,11 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
           ..write('id: $id, ')
           ..write('tableId: $tableId, ')
           ..write('startTime: $startTime, ')
-          ..write('endTime: $endTime, ')
+          ..write('expectedEndTime: $expectedEndTime, ')
+          ..write('actualEndTime: $actualEndTime, ')
           ..write('totalPrice: $totalPrice, ')
-          ..write('durationMinutes: $durationMinutes')
+          ..write('hourPrice: $hourPrice, ')
+          ..write('status: $status')
           ..write(')'))
         .toString();
   }
@@ -1564,18 +1677,22 @@ typedef $$SessionTableCreateCompanionBuilder =
       Value<int> id,
       required int tableId,
       required DateTime startTime,
-      Value<DateTime?> endTime,
-      Value<double> totalPrice,
-      Value<int?> durationMinutes,
+      Value<DateTime?> expectedEndTime,
+      Value<DateTime?> actualEndTime,
+      Value<double?> totalPrice,
+      required double hourPrice,
+      Value<bool> status,
     });
 typedef $$SessionTableUpdateCompanionBuilder =
     SessionCompanion Function({
       Value<int> id,
       Value<int> tableId,
       Value<DateTime> startTime,
-      Value<DateTime?> endTime,
-      Value<double> totalPrice,
-      Value<int?> durationMinutes,
+      Value<DateTime?> expectedEndTime,
+      Value<DateTime?> actualEndTime,
+      Value<double?> totalPrice,
+      Value<double> hourPrice,
+      Value<bool> status,
     });
 
 final class $$SessionTableReferences
@@ -1619,8 +1736,13 @@ class $$SessionTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get endTime => $composableBuilder(
-    column: $table.endTime,
+  ColumnFilters<DateTime> get expectedEndTime => $composableBuilder(
+    column: $table.expectedEndTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get actualEndTime => $composableBuilder(
+    column: $table.actualEndTime,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1629,8 +1751,13 @@ class $$SessionTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get durationMinutes => $composableBuilder(
-    column: $table.durationMinutes,
+  ColumnFilters<double> get hourPrice => $composableBuilder(
+    column: $table.hourPrice,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1677,8 +1804,13 @@ class $$SessionTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get endTime => $composableBuilder(
-    column: $table.endTime,
+  ColumnOrderings<DateTime> get expectedEndTime => $composableBuilder(
+    column: $table.expectedEndTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get actualEndTime => $composableBuilder(
+    column: $table.actualEndTime,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1687,8 +1819,13 @@ class $$SessionTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get durationMinutes => $composableBuilder(
-    column: $table.durationMinutes,
+  ColumnOrderings<double> get hourPrice => $composableBuilder(
+    column: $table.hourPrice,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1731,18 +1868,26 @@ class $$SessionTableAnnotationComposer
   GeneratedColumn<DateTime> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get endTime =>
-      $composableBuilder(column: $table.endTime, builder: (column) => column);
+  GeneratedColumn<DateTime> get expectedEndTime => $composableBuilder(
+    column: $table.expectedEndTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get actualEndTime => $composableBuilder(
+    column: $table.actualEndTime,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get totalPrice => $composableBuilder(
     column: $table.totalPrice,
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get durationMinutes => $composableBuilder(
-    column: $table.durationMinutes,
-    builder: (column) => column,
-  );
+  GeneratedColumn<double> get hourPrice =>
+      $composableBuilder(column: $table.hourPrice, builder: (column) => column);
+
+  GeneratedColumn<bool> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 
   $$GameTableTableAnnotationComposer get tableId {
     final $$GameTableTableAnnotationComposer composer = $composerBuilder(
@@ -1799,32 +1944,40 @@ class $$SessionTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> tableId = const Value.absent(),
                 Value<DateTime> startTime = const Value.absent(),
-                Value<DateTime?> endTime = const Value.absent(),
-                Value<double> totalPrice = const Value.absent(),
-                Value<int?> durationMinutes = const Value.absent(),
+                Value<DateTime?> expectedEndTime = const Value.absent(),
+                Value<DateTime?> actualEndTime = const Value.absent(),
+                Value<double?> totalPrice = const Value.absent(),
+                Value<double> hourPrice = const Value.absent(),
+                Value<bool> status = const Value.absent(),
               }) => SessionCompanion(
                 id: id,
                 tableId: tableId,
                 startTime: startTime,
-                endTime: endTime,
+                expectedEndTime: expectedEndTime,
+                actualEndTime: actualEndTime,
                 totalPrice: totalPrice,
-                durationMinutes: durationMinutes,
+                hourPrice: hourPrice,
+                status: status,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required int tableId,
                 required DateTime startTime,
-                Value<DateTime?> endTime = const Value.absent(),
-                Value<double> totalPrice = const Value.absent(),
-                Value<int?> durationMinutes = const Value.absent(),
+                Value<DateTime?> expectedEndTime = const Value.absent(),
+                Value<DateTime?> actualEndTime = const Value.absent(),
+                Value<double?> totalPrice = const Value.absent(),
+                required double hourPrice,
+                Value<bool> status = const Value.absent(),
               }) => SessionCompanion.insert(
                 id: id,
                 tableId: tableId,
                 startTime: startTime,
-                endTime: endTime,
+                expectedEndTime: expectedEndTime,
+                actualEndTime: actualEndTime,
                 totalPrice: totalPrice,
-                durationMinutes: durationMinutes,
+                hourPrice: hourPrice,
+                status: status,
               ),
           withReferenceMapper: (p0) => p0
               .map(

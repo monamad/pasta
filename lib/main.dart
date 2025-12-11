@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pasta/app_feature/data/repos/category_repository.dart';
 import 'package:pasta/app_feature/data/repos/table_repository.dart';
 import 'package:pasta/core/di/service_locator.dart';
@@ -8,6 +9,10 @@ import 'package:pasta/core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   await setupServiceLocator();
   await _seedData();
   runApp(const MyApp());
@@ -16,10 +21,10 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      themeMode: ThemeMode.light,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       onGenerateRoute: AppRouter.generateRoute,

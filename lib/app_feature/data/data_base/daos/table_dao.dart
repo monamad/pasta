@@ -43,7 +43,7 @@ class TableDao extends DatabaseAccessor<AppDatabase>
             leftOuterJoin(
               session,
               session.tableId.equalsExp(gameTable.id) &
-                  session.endTime.isNull(),
+                  session.actualEndTime.isNull(),
             ),
           ])
           ..where(gameTable.categoryId.equals(categoryId))
@@ -58,7 +58,8 @@ class TableDao extends DatabaseAccessor<AppDatabase>
     final query = (select(gameTable)).join([
       innerJoin(
         session,
-        session.tableId.equalsExp(gameTable.id) & session.endTime.isNull(),
+        session.tableId.equalsExp(gameTable.id) &
+            session.actualEndTime.isNull(),
       ),
     ]);
 
@@ -73,7 +74,8 @@ class TableDao extends DatabaseAccessor<AppDatabase>
       ..join([
         innerJoin(
           session,
-          session.tableId.equalsExp(gameTable.id) & session.endTime.isNull(),
+          session.tableId.equalsExp(gameTable.id) &
+              session.actualEndTime.isNull(),
         ),
       ]);
 

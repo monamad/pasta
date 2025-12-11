@@ -92,7 +92,7 @@ class _CustomTimePickerState extends State<CustomTimePicker>
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -168,7 +168,7 @@ class _CustomTimePickerState extends State<CustomTimePicker>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? primaryColor.withOpacity(0.2)
+              ? primaryColor.withValues(alpha: 0.2)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -197,9 +197,9 @@ class _CustomTimePickerState extends State<CustomTimePicker>
               height: 280,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: primaryColor.withOpacity(0.05),
+                color: primaryColor.withValues(alpha: 0.05),
                 border: Border.all(
-                  color: primaryColor.withOpacity(0.1),
+                  color: primaryColor.withValues(alpha: 0.1),
                   width: 2,
                 ),
               ),
@@ -261,7 +261,7 @@ class _CustomTimePickerState extends State<CustomTimePicker>
                         : FontWeight.normal,
                     color: isSelected
                         ? Colors.white
-                        : theme.colorScheme.onSurface.withOpacity(0.7),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ),
@@ -276,7 +276,7 @@ class _CustomTimePickerState extends State<CustomTimePicker>
   Widget _buildPeriodToggle(ThemeData theme, Color primaryColor) {
     return Container(
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.1),
+        color: primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -336,6 +336,27 @@ class _CustomTimePickerState extends State<CustomTimePicker>
         ElevatedButton(
           onPressed: () {
             _notifyTimeChange();
+            if (!mounted) return;
+            DateTime now = DateTime.now();
+
+            DateTime selectedDateTime = DateTime(
+              now.year,
+              now.month,
+              now.day,
+              _selectedHour == 12
+                  ? (_isAM ? 0 : 12)
+                  : (_isAM ? _selectedHour : _selectedHour + 12),
+              _selectedMinute,
+            );
+            if (selectedDateTime.isBefore(now)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please select a future time.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
             Navigator.of(context).pop(
               TimeOfDay(
                 hour: _isAM

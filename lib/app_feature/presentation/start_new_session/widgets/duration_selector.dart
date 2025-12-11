@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pasta/core/theme/app_colors.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
-
 class DurationSelector extends StatelessWidget {
-  final int duration;
-  final ValueChanged<int> onDurationChanged;
+  final double duration;
+  final ValueChanged<double> onDurationChanged;
 
   const DurationSelector({
     super.key,
@@ -29,8 +28,8 @@ class DurationSelector extends StatelessWidget {
           children: [
             _CircleButton(
               icon: Icons.remove,
-              onTap: duration > 1
-                  ? () => onDurationChanged(duration - 1)
+              onTap: duration > 0.5
+                  ? () => onDurationChanged(duration - 0.5)
                   : null,
               theme: theme,
             ),
@@ -39,7 +38,7 @@ class DurationSelector extends StatelessWidget {
             const SizedBox(width: 32),
             _CircleButton(
               icon: Icons.add,
-              onTap: () => onDurationChanged(duration + 1),
+              onTap: () => onDurationChanged(duration + 0.5),
               theme: theme,
             ),
           ],

@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
@@ -25,16 +26,16 @@ class HomeCubit extends Cubit<HomeState> {
         _tableRepository.numberOfBusyTables(),
         _sessionRepository.getTotalTodayRevenue(),
         _sessionRepository.getRunning(),
+        _sessionRepository.getDoneSessions(),
       ]);
 
       final categories = results[0] as List<CategoryData>;
       final totalBusyTables = results[1] as int;
 
-      var x = await _sessionRepository.getAllSessions();
-      print(x);
       emit(
         HomeLoaded(
           activeSessions: results[3] as List<SessionWithDetails>,
+          doneSessions: results[4] as List<SessionWithDetails>,
           categories: categories,
           totalBusyTables: totalBusyTables,
           totalTodayRevenue: results[2] as double,
@@ -45,8 +46,58 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  Future<void> getAllCategories() async {
+    emit(
+      (state as HomeLoaded).copyWith(
+        categories: await _categoryRepository.getAll(),
+      ),
+    );
+  }
+
+  Future<void> getnumberOfBusyTables() async {
+    emit(
+      (state as HomeLoaded).copyWith(
+        totalBusyTables: await _tableRepository.numberOfBusyTables(),
+      ),
+    );
+  }
+
+  Future<void> getTotalTodayRevenue() async {
+    emit(
+      (state as HomeLoaded).copyWith(
+        totalTodayRevenue: await _sessionRepository.getTotalTodayRevenue(),
+      ),
+    );
+  }
+
+  Future<void> getRunningSessions() async {
+    final updatedSessions = await _sessionRepository.getRunning();
+
+    emit(
+      (state as HomeLoaded).copyWith(
+        activeSessions: List.from(updatedSessions),
+      ),
+    );
+  }
+
+  Future<void> getDoneSessions() async {
+    final updatedSessions = await _sessionRepository.getDoneSessions();
+
+    emit(
+      (state as HomeLoaded).copyWith(doneSessions: List.from(updatedSessions)),
+    );
+  }
+
   Future<void> stopSession(int sessionId) async {
     await _sessionRepository.endSession(sessionId);
-    loadHomeData();
+    await getRunningSessions();
+    await getTotalTodayRevenue();
+    await getnumberOfBusyTables();
+    await getDoneSessions();
+  }
+
+  Future<void> extendSession(int sessionId, int additionalMinutes) async {
+    await _sessionRepository.extendSession(sessionId, additionalMinutes);
+    await getRunningSessions();
   }
 }

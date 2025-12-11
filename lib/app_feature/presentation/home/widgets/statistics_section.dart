@@ -11,9 +11,6 @@ class StatisticsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
-        if (state is HomeLoading) {
-          return Center(child: CircularProgressIndicator());
-        }
         if (state is HomeLoaded) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

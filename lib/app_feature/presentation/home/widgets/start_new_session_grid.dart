@@ -13,9 +13,6 @@ class StartNewSessionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
-        if (state is HomeLoading) {
-          return Center(child: CircularProgressIndicator());
-        }
         if (state is HomeLoaded) {
           return GridView.count(
             crossAxisCount: 2,
@@ -51,6 +48,8 @@ class CategoryCard extends StatelessWidget {
           ).then((value) async {
             if (value == true) {
               if (context.mounted) {
+                context.read<HomeCubit>().loadHomeData();
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

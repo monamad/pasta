@@ -18,10 +18,11 @@ class StartNewSessionView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Start New Session')),
-      body: BlocListener<StartNewSessionCubit, StartNewSessionState>(
+      body: BlocConsumer<StartNewSessionCubit, StartNewSessionState>(
+        buildWhen: (previous, current) => current is! StartNewSessionSubmitted,
         listener: (context, state) {
           if (state is StartNewSessionSubmitted) {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(true);
           } else if (state is StartNewSessionSubmitError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -38,92 +39,76 @@ class StartNewSessionView extends StatelessWidget {
             );
           }
         },
-        child: BlocBuilder<StartNewSessionCubit, StartNewSessionState>(
-          builder: (context, state) {
-            if (state is StartNewSessionLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state is StartNewSessionError) {
-              return Center(child: Text('Error: ${state.message}'));
-            }
-            if (state is StartNewSessionDataLoaded) {
-              if (state.availableTables.isEmpty) {
-                return const Center(child: Text('No available tables.'));
-              }
-            }
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    Text("Session Details", style: AppTextStyles.bold24),
-                    const SizedBox(height: 20),
-                    Text('Select Table', style: AppTextStyles.regular14),
-                    const SizedBox(height: 10),
-                    SelectTableSection(),
-                    const SizedBox(height: 20),
-                    Text('Start time', style: AppTextStyles.regular14),
-                    const SizedBox(height: 10),
-                    // Start Time
-                    ValueListenableBuilder(
-                      valueListenable: context
-                          .read<StartNewSessionCubit>()
-                          .startTime,
-                      builder: (context, value, child) {
-                        return AppTimePicker(
-                          selectedTime: context
-                              .read<StartNewSessionCubit>()
-                              .startTime
-                              .value,
-                          onTap: () => _pickTime(context),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 20), // Session Type
-                    Text('Session Type', style: AppTextStyles.regular14),
-                    const SizedBox(height: 10),
-                    ValueListenableBuilder(
-                      valueListenable: context
-                          .read<StartNewSessionCubit>()
-                          .sessionType,
-                      builder: (context, value, child) {
-                        return SessionTypeSelector(
-                          selectedType: context
-                              .read<StartNewSessionCubit>()
-                              .sessionType
-                              .value,
-                          onTypeChanged: (type) {
-                            context
-                                    .read<StartNewSessionCubit>()
-                                    .sessionType
-                                    .value =
-                                type;
-                          },
-                        );
-                      },
-                    ),
+        builder: (context, state) {
+          final cubit = context.read<StartNewSessionCubit>();
 
-                    const SizedBox(
-                      height: 20,
-                    ), // Duration and Pricing (for hourly sessions)
+          if (state is StartNewSessionLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                    SelectDurationSection(selectedCategory: selectedCategory),
-                    const SizedBox(height: 20),
+          if (state is StartNewSessionError) {
+            return Center(child: Text('Error: ${state.message}'));
+          }
 
-                    // Start Button
-                    CustomButton(
-                      text: 'Start Session',
-                      onTap: () => _startSession(context),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+          if (state is StartNewSessionDataLoaded &&
+              state.availableTables.isEmpty) {
+            return const Center(child: Text('No available tables.'));
+          }
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Text("Session Details", style: AppTextStyles.bold24),
+                  const SizedBox(height: 20),
+                  Text('Select Table', style: AppTextStyles.regular14),
+                  const SizedBox(height: 10),
+                  SelectTableSection(),
+                  const SizedBox(height: 20),
+                  Text('Start time', style: AppTextStyles.regular14),
+                  const SizedBox(height: 10),
+                  // Start Time
+                  ValueListenableBuilder<TimeOfDay>(
+                    valueListenable: cubit.startTime,
+                    builder: (context, selectedTime, child) {
+                      return AppTimePicker(
+                        selectedTime: selectedTime,
+                        onTap: () => _pickTime(context),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20), // Session Type
+                  Text('Session Type', style: AppTextStyles.regular14),
+                  const SizedBox(height: 10),
+                  ValueListenableBuilder<SessionType>(
+                    valueListenable: cubit.sessionType,
+                    builder: (context, selectedType, child) {
+                      return SessionTypeSelector(
+                        selectedType: selectedType,
+                        onTypeChanged: (type) {
+                          cubit.sessionType.value = type;
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Duration and Pricing (for hourly sessions)
+                  SelectDurationSection(selectedCategory: selectedCategory),
+                  const SizedBox(height: 20),
+                  // Start Button
+                  CustomButton(
+                    text: 'Start Session',
+                    onTap: () => _startSession(context),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

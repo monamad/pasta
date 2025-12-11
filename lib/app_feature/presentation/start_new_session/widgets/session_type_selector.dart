@@ -66,7 +66,7 @@ class _SessionTypeButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primary.withOpacity(0.1)
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           border: Border.all(
             color: isSelected ? theme.colorScheme.primary : theme.dividerColor,

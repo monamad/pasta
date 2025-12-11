@@ -1,13 +1,14 @@
+import 'package:equatable/equatable.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/data/data_base/daos/table_dao.dart';
 import 'package:pasta/app_feature/data/data_base/daos/category_dao.dart';
 
-class SessionWithDetails {
+class SessionWithDetails extends Equatable {
   final SessionData session;
   final GameTableData table;
   final CategoryData category;
 
-  SessionWithDetails({
+  const SessionWithDetails({
     required this.session,
     required this.table,
     required this.category,
@@ -46,8 +47,16 @@ class SessionWithDetails {
 
   DateTime get startTime => session.startTime;
 
-  DateTime? get endTime => session.endTime;
+  DateTime? get actualEndTime => session.actualEndTime;
+  DateTime? get expectedEndTime => session.expectedEndTime;
 
-  double get totalPrice => session.totalPrice;
-  int? get durationMinutes => session.durationMinutes;
+  double? get totalPrice => session.totalPrice;
+  double get hourPrice => session.hourPrice;
+  @override
+  List<Object?> get props => [
+    session.id,
+    session.expectedEndTime,
+    session.actualEndTime,
+    session.totalPrice,
+  ];
 }
