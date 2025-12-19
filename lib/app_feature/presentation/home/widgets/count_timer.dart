@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
@@ -31,13 +33,32 @@ class _CountTimerState extends State<CountTimer> {
         ? widget.expectedEndTime!.difference(DateTime.now()).inSeconds
         : DateTime.now().difference(widget.startedAt).inSeconds;
     isCountDown = widget.expectedEndTime != null;
+    if (isCountDown) {
+      if (totalSeconds <= 0) {
+        totalSeconds = 0;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.read<HomeCubit>().stopSession(widget.sessionId);
+        });
+        return;
+      }
+    } else {
+      if (totalSeconds < 0) {
+        totalSeconds = 0;
+      }
+    }
+
     startTimer();
   }
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        timer?.cancel();
+        return;
+      }
       if (isCountDown) {
-        if (totalSeconds == -1) {
+        if (totalSeconds == 0 && isCountDown) {
           timer?.cancel();
           context.read<HomeCubit>().stopSession(widget.sessionId);
           return;
@@ -65,7 +86,16 @@ class _CountTimerState extends State<CountTimer> {
 
   @override
   Widget build(BuildContext context) {
-    return Text(formatTime(totalSeconds), style: AppTextStyles.bold16);
+    return AutoSizeText(
+      formatTime(totalSeconds),
+      maxLines: 1,
+      maxFontSize: 20,
+      stepGranularity: 1,
+      style: AppTextStyles.bold16.copyWith(
+        fontFeatures: const [FontFeature.tabularFigures()],
+        fontSize: MediaQuery.of(context).size.width > 400 ? 16 : 16.sp,
+      ),
+    );
   }
 
   @override

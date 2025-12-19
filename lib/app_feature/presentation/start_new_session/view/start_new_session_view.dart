@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/logic/start_new_session/start_new_session_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/custom_button.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/app_time_picker.dart';
-import 'package:pasta/app_feature/presentation/start_new_session/widgets/custom_time_picker.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/select_duration_section.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/select_table_section.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/session_type_selector.dart';
@@ -57,32 +57,34 @@ class StartNewSessionView extends StatelessWidget {
 
           return SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Text("Session Details", style: AppTextStyles.bold24),
-                  const SizedBox(height: 20),
-                  Text('Select Table', style: AppTextStyles.regular14),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 20.h),
+                  Text('Select Table', style: AppTextStyles.regular16),
+                  SizedBox(height: 10.h),
                   SelectTableSection(),
-                  const SizedBox(height: 20),
-                  Text('Start time', style: AppTextStyles.regular14),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 20.h),
+                  Text('Start time', style: AppTextStyles.regular16),
+                  SizedBox(height: 10.h),
                   // Start Time
-                  ValueListenableBuilder<TimeOfDay>(
+                  ValueListenableBuilder<DateTime?>(
                     valueListenable: cubit.startTime,
                     builder: (context, selectedTime, child) {
                       return AppTimePicker(
-                        selectedTime: selectedTime,
-                        onTap: () => _pickTime(context),
+                        selectedTime: TimeOfDay.fromDateTime(
+                          selectedTime ?? DateTime.now(),
+                        ),
+                        onTap: () => _pickTime(context, cubit),
                       );
                     },
                   ),
-                  const SizedBox(height: 20), // Session Type
-                  Text('Session Type', style: AppTextStyles.regular14),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 20.h), // Session Type
+                  Text('Session Type', style: AppTextStyles.regular16),
+                  SizedBox(height: 10.h),
                   ValueListenableBuilder<SessionType>(
                     valueListenable: cubit.sessionType,
                     builder: (context, selectedType, child) {
@@ -94,16 +96,16 @@ class StartNewSessionView extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   // Duration and Pricing (for hourly sessions)
                   SelectDurationSection(selectedCategory: selectedCategory),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   // Start Button
                   CustomButton(
                     text: 'Start Session',
                     onTap: () => _startSession(context),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                 ],
               ),
             ),
@@ -113,16 +115,19 @@ class StartNewSessionView extends StatelessWidget {
     );
   }
 
-  Future<void> _pickTime(BuildContext context) async {
-    final TimeOfDay? selectedTime = await showCustomTimePicker(
+  Future<void> _pickTime(
+    BuildContext context,
+    StartNewSessionCubit cubit,
+  ) async {
+    final TimeOfDay? selectedTime = await showTimePicker(
       context: context,
-      initialTime: context.read<StartNewSessionCubit>().startTime.value,
-      primaryColor: Theme.of(context).colorScheme.primary,
+      initialTime: TimeOfDay.fromDateTime(
+        cubit.startTime.value ?? DateTime.now(),
+      ),
     );
 
     if (selectedTime != null) {
-      // ignore: use_build_context_synchronously
-      context.read<StartNewSessionCubit>().startTime.value = selectedTime;
+      cubit.assignNewStartTime(selectedTime);
     }
   }
 

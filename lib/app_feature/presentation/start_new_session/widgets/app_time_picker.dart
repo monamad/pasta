@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTimePicker extends StatelessWidget {
   const AppTimePicker({
@@ -16,27 +16,22 @@ class AppTimePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: _onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
           children: [
             const Icon(Icons.access_time, color: Colors.grey),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Text(
               _selectedTime != null
                   ? _selectedTime.format(context)
                   : 'Select time',
-              style: TextStyle(
-                fontSize: 16,
-                color: _selectedTime != null
-                    ? Colors.black
-                    : Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16.sp),
             ),
           ],
         ),

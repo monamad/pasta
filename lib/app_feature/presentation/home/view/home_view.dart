@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/start_new_session_section.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/active_sessions_section.dart';
@@ -20,7 +21,7 @@ class HomeView extends StatelessWidget {
         },
 
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.w),
           child: BlocBuilder<HomeCubit, HomeState>(
             builder: (context, state) {
               if (state is HomeLoading) {
@@ -32,11 +33,11 @@ class HomeView extends StatelessWidget {
                 child: Column(
                   children: [
                     StartNewSessionSection(),
-                    SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     StatisticsSection(),
-                    SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     ActiveSessionsSection(),
-                    SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     DoneSessionsSection(),
                   ],
                 ),

@@ -1,4 +1,6 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
 class StatCard extends StatelessWidget {
@@ -26,32 +28,32 @@ class StatCard extends StatelessWidget {
     return Card(
       color: backgroundColor,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
                     color: iconColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Icon(icon, color: Colors.white),
+                  child: Icon(icon, color: Colors.white, size: 24.sp),
                 ),
                 Spacer(),
                 Text(
                   statusText,
-                  style: AppTextStyles.regular14.copyWith(color: statusColor),
+                  style: AppTextStyles.regular16.copyWith(color: statusColor),
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(value, style: AppTextStyles.bold24),
-            SizedBox(height: 8),
-            Text(label, style: AppTextStyles.regular14),
+            SizedBox(height: 8.h),
+            AutoSizeText(label, style: AppTextStyles.regular16, maxLines: 1),
           ],
         ),
       ),

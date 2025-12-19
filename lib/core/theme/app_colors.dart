@@ -12,6 +12,7 @@ class AppColors {
   static const Color green = Color(0xFF16A34A);
   static const Color red = Color(0xFFDC2626);
   static const Color purple = Color(0xFF9333EA);
+  static const Color teal = Color(0xFF14B8A6);
   static const Color mint = Color(0xFFDCFCE7);
   static const Color violetLight = Color(0xFFE5E7EB);
   static const Color orange = Color(0xFFEA580C);
@@ -23,4 +24,6 @@ class AppColors {
   static const Color graySoft = Color(0xFFF9FAFB);
   static const Color cream = Color(0xFFFfEDD5);
   static const Color white20 = Color(0x33FFFFFF); // 0x33 = 20% alpha
+  static const Color blueDark = Color(0xFF1E3A8A);
+  static const Color greenDark = Color(0xFF166534);
 }

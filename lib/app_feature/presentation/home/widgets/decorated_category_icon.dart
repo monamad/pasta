@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/core/theme/app_colors.dart';
 
 class DecoratedCategoryIcon extends StatelessWidget {
@@ -10,10 +11,10 @@ class DecoratedCategoryIcon extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: data.iconBackgroundColor,
-        borderRadius: BorderRadius.all(Radius.circular(8)),
+        borderRadius: BorderRadius.all(Radius.circular(8.r)),
       ),
-      padding: const EdgeInsets.all(12.0),
-      child: Icon(data.icon, color: data.iconColor, size: 24),
+      padding: EdgeInsets.all(12.w),
+      child: Icon(data.icon, color: data.iconColor, size: 24.sp),
     );
   }
 }

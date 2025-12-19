@@ -8,6 +8,7 @@ class SelectTableSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<StartNewSessionCubit, StartNewSessionState>(
       builder: (context, state) {
         if (state is StartNewSessionLoading) {
@@ -43,7 +44,11 @@ class SelectTableSection extends StatelessWidget {
                     },
                     selectedColor: AppColors.primary,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
+                      color: isDarkMode
+                          ? Colors.white
+                          : isSelected
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   );
                 },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/logic/start_new_session/start_new_session_cubit.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/duration_selector.dart';
@@ -33,7 +34,7 @@ class SelectDurationSection extends StatelessWidget {
                   );
                 },
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               ValueListenableBuilder(
                 valueListenable: context.read<StartNewSessionCubit>().duration,
                 builder: (context, value, child) {

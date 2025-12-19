@@ -106,4 +106,9 @@ abstract class AppTextStyles {
     fontSize: 12.responsive,
     fontWeight: FontWeight.w400,
   );
+
+  static final TextStyle regular10 = GoogleFonts.lato(
+    fontSize: 10.responsive,
+    fontWeight: FontWeight.w400,
+  );
 }

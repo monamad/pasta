@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/stat_card.dart';
 import 'package:pasta/core/theme/app_colors.dart';
@@ -9,6 +10,7 @@ class StatisticsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
         if (state is HomeLoaded) {
@@ -17,7 +19,9 @@ class StatisticsSection extends StatelessWidget {
             children: [
               Expanded(
                 child: StatCard(
-                  backgroundColor: AppColors.blueLighter,
+                  backgroundColor: isDarkMode
+                      ? AppColors.blueDark
+                      : AppColors.blueLighter,
                   iconColor: AppColors.primary,
                   icon: Icons.play_arrow,
                   statusText: 'Active',
@@ -26,10 +30,12 @@ class StatisticsSection extends StatelessWidget {
                   label: 'Running Sessions',
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: 16.w),
               Expanded(
                 child: StatCard(
-                  backgroundColor: AppColors.greenSoft,
+                  backgroundColor: isDarkMode
+                      ? AppColors.greenDark
+                      : AppColors.greenSoft,
                   iconColor: AppColors.green,
                   icon: Icons.attach_money,
                   statusText: 'Active',

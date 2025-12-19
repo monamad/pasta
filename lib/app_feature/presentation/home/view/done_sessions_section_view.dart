@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/done_sessions_section_body.dart';
 
@@ -15,7 +16,7 @@ class DoneSessionsSectionView extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: const Text('Done Sessions')),
         body: SingleChildScrollView(
-          padding: EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.w),
           child: DoneSessionsSectionBody(),
         ),
       ),

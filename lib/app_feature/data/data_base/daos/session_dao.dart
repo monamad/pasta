@@ -13,7 +13,11 @@ abstract class ISessionDao {
     DateTime? startTime,
     DateTime? expectedEndTime,
   });
-  Future<double> endSession(int sessionId, double totalPrice);
+  Future<double> endSession(
+    int sessionId,
+    double totalPrice,
+    DateTime? endedTime,
+  );
   Future<void> updateSession(SessionData session);
   Future<List<SessionData>> getSessionsByDateRange(
     DateTime start,
@@ -79,6 +83,7 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
     DateTime? startTime,
     DateTime? expectedEndTime,
   }) async {
+   
     final tableData = await (select(
       gameTable,
     )..where((tbl) => tbl.id.equals(tableId))).getSingleOrNull();
@@ -102,10 +107,20 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
   }
 
   @override
-  Future<double> endSession(int sessionId, double totalPrice) async {
+  Future<double> endSession(
+    int sessionId,
+    double totalPrice,
+    DateTime? endedTime,
+  ) async {
+    //canceled session
+    if (totalPrice <= 0) {
+      //remove this session
+      await (delete(session)..where((tbl) => tbl.id.equals(sessionId))).go();
+      return 0;
+    }
     await (update(session)..where((tbl) => tbl.id.equals(sessionId))).write(
       SessionCompanion(
-        actualEndTime: Value(DateTime.now()),
+        actualEndTime: Value(endedTime ?? DateTime.now()),
         totalPrice: Value(totalPrice),
       ),
     );

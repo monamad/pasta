@@ -15,7 +15,7 @@ class ResponsiveFontSize {
     return responsiveFontSize.clamp(lowerLimit, upperLimit);
   }
 
-  static double getScaleFactor(context) {
+  static double getScaleFactor(BuildContext context) {
     // var dispatcher = PlatformDispatcher.instance;
     // var physicalWidth = dispatcher.views.first.physicalSize.width;
     // var devicePixelRatio = dispatcher.views.first.devicePixelRatio;

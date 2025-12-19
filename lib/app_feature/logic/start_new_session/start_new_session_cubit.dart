@@ -11,12 +11,21 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
   final TableRepository _tableRepository;
   final SessionRepository _sessionRepository;
   ValueNotifier<int?> selectedTableId = ValueNotifier(null);
-  ValueNotifier<TimeOfDay> startTime = ValueNotifier(TimeOfDay.now());
+  ValueNotifier<DateTime?> startTime = ValueNotifier(null);
   ValueNotifier<SessionType> sessionType = ValueNotifier(SessionType.hourly);
   ValueNotifier<double> duration = ValueNotifier(1.0);
 
   StartNewSessionCubit(this._tableRepository, this._sessionRepository)
     : super(StartNewSessionInitial());
+
+  @override
+  Future<void> close() {
+    selectedTableId.dispose();
+    startTime.dispose();
+    sessionType.dispose();
+    duration.dispose();
+    return super.close();
+  }
 
   Future<void> loadAvailableTables(int categoryId) async {
     emit(StartNewSessionLoading());
@@ -39,18 +48,32 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
         durationHours: sessionType.value == SessionType.hourly
             ? duration.value
             : null,
-        startTime: DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-          startTime.value.hour,
-          startTime.value.minute,
-          DateTime.now().second,
-        ),
+        startTime: startTime.value ?? DateTime.now(),
       );
       emit(StartNewSessionSubmitted());
     } catch (e) {
       emit(StartNewSessionSubmitError(e.toString(), availableTables));
     }
+  }
+
+  void assignNewStartTime(TimeOfDay? time) {
+    if (time == null) return;
+
+    final now = DateTime.now();
+
+    DateTime selectedDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+      0,
+    );
+
+    if (selectedDateTime.isBefore(now)) {
+      selectedDateTime = selectedDateTime.add(const Duration(days: 1));
+    }
+
+    startTime.value = selectedDateTime;
   }
 }

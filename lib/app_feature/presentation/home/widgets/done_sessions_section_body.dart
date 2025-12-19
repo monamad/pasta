@@ -1,7 +1,10 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/decorated_category_icon.dart';
+import 'package:pasta/core/helper/functions.dart';
 import 'package:pasta/core/theme/app_colors.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
@@ -17,10 +20,10 @@ class DoneSessionsSectionBody extends StatelessWidget {
             children: [
               if (state.doneSessions.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.all(32.0),
+                  padding: EdgeInsets.all(32.w),
                   child: Text(
                     'No done sessions',
-                    style: AppTextStyles.regular14.copyWith(color: Colors.grey),
+                    style: AppTextStyles.regular16.copyWith(color: Colors.grey),
                   ),
                 )
               else
@@ -33,12 +36,6 @@ class DoneSessionsSectionBody extends StatelessWidget {
                       sessionDetail.expectedEndTime;
                   final totalPrice = sessionDetail.totalPrice;
 
-                  String formatTime(DateTime time) {
-                    final hour = time.hour.toString().padLeft(2, '0');
-                    final minute = time.minute.toString().padLeft(2, '0');
-                    return '$hour:$minute';
-                  }
-
                   String durationText = '';
                   if (endTime != null) {
                     final minutes = endTime.difference(startTime).inMinutes;
@@ -48,7 +45,7 @@ class DoneSessionsSectionBody extends StatelessWidget {
 
                   return Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.w),
                       child: Column(
                         children: [
                           Row(
@@ -58,32 +55,32 @@ class DoneSessionsSectionBody extends StatelessWidget {
                                   data: categoryIcons[categoryName]!,
                                 ),
                               if (categoryIcons.containsKey(categoryName))
-                                const SizedBox(width: 10),
+                                SizedBox(width: 10.w),
                               Text(tableName, style: AppTextStyles.bold16),
                               const Spacer(),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     endTime != null
-                                        ? '${formatTime(startTime)} - ${formatTime(endTime)}'
-                                        : formatTime(startTime),
+                                        ? '${formatTime12h(startTime)} - ${formatTime12h(endTime)}'
+                                        : formatTime12h(startTime),
                                     style: AppTextStyles.bold14,
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4.h),
                                   Text(
                                     endTime != null
                                         ? 'Duration'
                                         : 'Completed Session',
-                                    style: AppTextStyles.regular12.copyWith(
+                                    style: AppTextStyles.regular14.copyWith(
                                       color: AppColors.grayDeep,
                                     ),
                                   ),
                                   if (durationText.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
+                                    SizedBox(height: 4.h),
                                     Text(
                                       durationText,
-                                      style: AppTextStyles.regular12.copyWith(
+                                      style: AppTextStyles.regular14.copyWith(
                                         color: AppColors.grayDeep,
                                       ),
                                     ),
@@ -92,32 +89,32 @@ class DoneSessionsSectionBody extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12.h),
                           Row(
                             children: [
                               Text(
                                 categoryName,
-                                style: AppTextStyles.regular14.copyWith(
+                                style: AppTextStyles.regular16.copyWith(
                                   color: AppColors.grayDeep,
                                 ),
                               ),
                               const Spacer(),
                               Text(
                                 'Completed',
-                                style: AppTextStyles.regular14.copyWith(
+                                style: AppTextStyles.regular16.copyWith(
                                   color: AppColors.grayDeep,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12.h),
                           Row(
                             children: [
                               Text(
                                 totalPrice != null
                                     ? '\$${totalPrice.toStringAsFixed(2)}'
                                     : 'No total recorded',
-                                style: AppTextStyles.regular14.copyWith(
+                                style: AppTextStyles.regular16.copyWith(
                                   color: AppColors.grayDeep,
                                 ),
                               ),

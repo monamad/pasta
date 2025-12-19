@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/core/theme/app_colors.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
@@ -19,11 +20,11 @@ class DurationSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Duration (Hours)',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Row(
           children: [
             _CircleButton(
@@ -33,9 +34,9 @@ class DurationSelector extends StatelessWidget {
                   : null,
               theme: theme,
             ),
-            const SizedBox(width: 32),
+            SizedBox(width: 32.w),
             Text(duration.toString(), style: AppTextStyles.bold20),
-            const SizedBox(width: 32),
+            SizedBox(width: 32.w),
             _CircleButton(
               icon: Icons.add,
               onTap: () => onDurationChanged(duration + 0.5),
@@ -63,16 +64,16 @@ class _CircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(24.r),
       child: Container(
-        width: 48,
-        height: 48,
+        width: 48.w,
+        height: 48.w,
         decoration: BoxDecoration(
           color: AppColors.grayLight,
 
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: AppColors.grayDeep, size: 20),
+        child: Icon(icon, color: AppColors.grayDeep, size: 20.sp),
       ),
     );
   }

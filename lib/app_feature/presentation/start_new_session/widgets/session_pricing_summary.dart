@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SessionPricingSummary extends StatelessWidget {
   final double ratePerHour;
@@ -22,7 +23,7 @@ class SessionPricingSummary extends StatelessWidget {
           isTotal: false,
           theme: theme,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         _PricingRow(
           label: 'Estimated Total:',
           amount: estimatedTotal,
@@ -55,7 +56,7 @@ class _PricingRow extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w400,
             color: theme.textTheme.bodyMedium?.color,
           ),
@@ -63,7 +64,7 @@ class _PricingRow extends StatelessWidget {
         Text(
           '\$${amount.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             color: isTotal
                 ? theme.colorScheme.primary

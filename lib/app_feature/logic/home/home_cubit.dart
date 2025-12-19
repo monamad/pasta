@@ -47,6 +47,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> getAllCategories() async {
+    if (state is! HomeLoaded) return;
     emit(
       (state as HomeLoaded).copyWith(
         categories: await _categoryRepository.getAll(),
@@ -54,7 +55,8 @@ class HomeCubit extends Cubit<HomeState> {
     );
   }
 
-  Future<void> getnumberOfBusyTables() async {
+  Future<void> getNumberOfBusyTables() async {
+    if (state is! HomeLoaded) return;
     emit(
       (state as HomeLoaded).copyWith(
         totalBusyTables: await _tableRepository.numberOfBusyTables(),
@@ -63,6 +65,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> getTotalTodayRevenue() async {
+    if (state is! HomeLoaded) return;
     emit(
       (state as HomeLoaded).copyWith(
         totalTodayRevenue: await _sessionRepository.getTotalTodayRevenue(),
@@ -71,6 +74,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> getRunningSessions() async {
+    if (state is! HomeLoaded) return;
     final updatedSessions = await _sessionRepository.getRunning();
 
     emit(
@@ -81,6 +85,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> getDoneSessions() async {
+    if (state is! HomeLoaded) return;
     final updatedSessions = await _sessionRepository.getDoneSessions();
 
     emit(
@@ -92,7 +97,7 @@ class HomeCubit extends Cubit<HomeState> {
     await _sessionRepository.endSession(sessionId);
     await getRunningSessions();
     await getTotalTodayRevenue();
-    await getnumberOfBusyTables();
+    await getNumberOfBusyTables();
     await getDoneSessions();
   }
 

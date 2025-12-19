@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
 import 'package:pasta/core/routing/routes.dart';
@@ -79,13 +80,13 @@ class CategoryCard extends StatelessWidget {
   Widget getCategoryIcon(String categoryName) {
     switch (categoryName) {
       case 'Ping Pong':
-        return Image.asset('assets/pingpong.png', width: 24, height: 24);
+        return Image.asset('assets/pingpong.png', width: 24.w, height: 24.w);
       case 'Console':
-        return Image.asset('assets/console.png', width: 24, height: 24);
+        return Image.asset('assets/console.png', width: 24.w, height: 24.w);
       case 'Billiard':
-        return Image.asset('assets/billiard.png', width: 24, height: 24);
+        return Image.asset('assets/billiard.png', width: 24.w, height: 24.w);
       case 'Snooker':
-        return Image.asset('assets/snooker.png', width: 24, height: 24);
+        return Image.asset('assets/snooker.png', width: 24.w, height: 24.w);
       default:
         return Icon(Icons.category);
     }
