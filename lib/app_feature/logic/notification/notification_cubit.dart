@@ -26,7 +26,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       );
 
       if (shouldHighlight) {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 2));
         if (isClosed) return;
         emit(
           NotificationLoaded(

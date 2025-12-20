@@ -30,6 +30,15 @@ class SessionRepository {
       expectedEndTime = startTime.add(
         Duration(minutes: (durationHours * 60).toInt()),
       );
+      // Adjust expectedEndTime to remove milliseconds
+      expectedEndTime = DateTime(
+        expectedEndTime.year,
+        expectedEndTime.month,
+        expectedEndTime.day,
+        expectedEndTime.hour,
+        expectedEndTime.minute,
+        expectedEndTime.second,
+      );
     }
     final running = await _sessionDao.getRunningSessionByTableId(tableId);
 
@@ -66,16 +75,31 @@ class SessionRepository {
   }
 
   Future<double> endSession(int sessionId) async {
-    DateTime endedTime = DateTime.now();
+    late final DateTime accualEndedTime;
+
     final sessionData = await _sessionDao.getSessionById(sessionId);
+
     if (sessionData == null) {
       throw Exception('Session not found');
     }
+    // if session with spacified end time, use that to calculate duration
+    if (sessionData.expectedEndTime != null) {
+      accualEndedTime = sessionData.expectedEndTime!;
+    } else {
+      // else use current time to calculate duration as session was open , assign like this to overcome milliseconds issue
+      accualEndedTime = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+        DateTime.now().hour,
+        DateTime.now().minute,
+        DateTime.now().second,
+      );
+    }
     final durationInHours =
-        endedTime.difference(sessionData.startTime).inMinutes / 60;
+        accualEndedTime.difference(sessionData.startTime).inMinutes / 60;
     final totalPrice = sessionData.hourPrice * durationInHours;
-
-    await _sessionDao.endSession(sessionId, totalPrice, endedTime);
+    await _sessionDao.endSession(sessionId, totalPrice, accualEndedTime);
     if (sessionData.expectedEndTime == null) {
       //show notification
       await _notificationService.showSessionEnded(

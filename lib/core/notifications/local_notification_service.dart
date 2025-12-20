@@ -33,7 +33,8 @@ class LocalNotificationService implements ILocalNotificationService {
   static const String _channelId = 'session_events';
   static const String _channelName = 'Session events';
   static const String _channelDescription = 'Notifications for session updates';
-  static const String _androidSmallIcon = '@mipmap/ic_launcher';
+
+  static const String _androidSmallIcon = '@mipmap/launcher_icon';
 
   static const int _maxNavRetries = 15;
   static const Duration _navRetryDelay = Duration(milliseconds: 250);

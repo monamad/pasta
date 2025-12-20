@@ -38,6 +38,7 @@ class _CountTimerState extends State<CountTimer> {
         totalSeconds = 0;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
+          print("Session ${widget.sessionId} ended, stopping session.");
           context.read<HomeCubit>().stopSession(widget.sessionId);
         });
         return;
@@ -59,6 +60,8 @@ class _CountTimerState extends State<CountTimer> {
       }
       if (isCountDown) {
         if (totalSeconds == 0 && isCountDown) {
+          print("Session ${widget.sessionId} ended, stopping session.");
+
           timer?.cancel();
           context.read<HomeCubit>().stopSession(widget.sessionId);
           return;
