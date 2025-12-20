@@ -533,7 +533,7 @@ class SettingsView extends StatelessWidget {
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
                           return LineTooltipItem(
-                            '${spot.x.toInt()}:00\n${spot.y.toInt()} جلسة',
+                            '${spot.x.toInt()}:00\n${spot.y.toInt()} sessions',
                             TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
