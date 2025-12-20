@@ -1,40 +1,20 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:pasta/core/extension/context_extention.dart';
+import 'package:pasta/core/notifications/local_notification_service.dart';
 import 'package:pasta/core/routing/routes.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
-abstract class ILocalNotificationService {
-  Future<void> init();
-
-  Future<void> scheduleEndBookingNotification({
-    required DateTime endTime,
-    required int notificationId,
-    required String tableName,
-    required double durationHours,
-    required double totalPrice,
-  });
-  Future<void> showSessionEnded({
-    required int notificationId,
-    required String tableName,
-    required double durationInHours,
-    required double totalPrice,
-  });
-  Future<void> cancelBookingNotification(int notificationId);
-}
-
-class LocalNotificationService implements ILocalNotificationService {
+class WindowsNotificationService implements ILocalNotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
 
-  LocalNotificationService(this._plugin);
+  WindowsNotificationService(this._plugin);
 
-  static const String _channelId = 'session_events';
-  static const String _channelName = 'Session events';
-  static const String _channelDescription = 'Notifications for session updates';
-
-  static const String _androidSmallIcon = '@mipmap/launcher_icon';
+  static const String _windowsAppName = 'pasta';
+  static const String _windowsAppUserModelId = 'com.example.pasta';
+  // Stable GUID used by Windows toast notifications.
+  static const String _windowsGuid = 'b6f3f3f7-2d55-4c1e-bb12-6e8a24ad0fdd';
 
   static const int _maxNavRetries = 15;
   static const Duration _navRetryDelay = Duration(milliseconds: 250);
@@ -46,15 +26,14 @@ class LocalNotificationService implements ILocalNotificationService {
     tz.initializeTimeZones();
     final TimezoneInfo currentTimeZone =
         await FlutterTimezone.getLocalTimezone();
-
     tz.setLocalLocation(tz.getLocation(currentTimeZone.identifier));
-    const androidSettings = AndroidInitializationSettings(_androidSmallIcon);
-    const iosSettings = DarwinInitializationSettings();
 
-    const settings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
+    const windowsSettings = WindowsInitializationSettings(
+      appName: _windowsAppName,
+      appUserModelId: _windowsAppUserModelId,
+      guid: _windowsGuid,
     );
+    const settings = InitializationSettings(windows: windowsSettings);
 
     await _plugin.initialize(
       settings,
@@ -69,30 +48,6 @@ class LocalNotificationService implements ILocalNotificationService {
     if (launchedFromNotification) {
       _handleNotificationTap(launchDetails?.notificationResponse?.payload);
     }
-
-    if (!kIsWeb) {
-      final android = _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
-      await android?.requestNotificationsPermission();
-
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestExactAlarmsPermission();
-      final ios = _plugin
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >();
-      await ios?.requestPermissions(alert: true, badge: true, sound: true);
-    }
-  }
-
-  @override
-  Future<void> cancelBookingNotification(int notificationId) async {
-    await _plugin.cancel(notificationId);
   }
 
   @override
@@ -108,18 +63,8 @@ class LocalNotificationService implements ILocalNotificationService {
       'Session ended',
       '$tableName • Duration: ${durationHours.toStringAsFixed(2)} hours\nTotal: ${totalPrice.toStringAsFixed(2)}',
       tz.TZDateTime.from(endTime, tz.local),
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          icon: _androidSmallIcon,
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
+      const NotificationDetails(windows: WindowsNotificationDetails()),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: null,
       payload: notificationId.toString(),
     );
   }
@@ -131,24 +76,19 @@ class LocalNotificationService implements ILocalNotificationService {
     required double durationInHours,
     required double totalPrice,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      _channelId,
-      _channelName,
-      channelDescription: _channelDescription,
-      icon: _androidSmallIcon,
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const details = NotificationDetails(android: androidDetails);
-
     await _plugin.show(
       notificationId,
       'Session ended',
       '$tableName • Duration: ${durationInHours.toStringAsFixed(2)} hours\nTotal: ${totalPrice.toStringAsFixed(2)}',
-      details,
+      const NotificationDetails(windows: WindowsNotificationDetails()),
       payload: notificationId.toString(),
     );
+  }
+
+  @override
+  Future<void> cancelBookingNotification(int notificationId) async {
+    // Note: on Windows, cancel only works reliably when packaged as MSIX.
+    await _plugin.cancel(notificationId);
   }
 
   void _handleNotificationTap(String? payload) {
@@ -187,3 +127,27 @@ class LocalNotificationService implements ILocalNotificationService {
   }
 }
 
+class NoOpLocalNotificationService implements ILocalNotificationService {
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<void> scheduleEndBookingNotification({
+    required DateTime endTime,
+    required int notificationId,
+    required String tableName,
+    required double durationHours,
+    required double totalPrice,
+  }) async {}
+
+  @override
+  Future<void> showSessionEnded({
+    required int notificationId,
+    required String tableName,
+    required double durationInHours,
+    required double totalPrice,
+  }) async {}
+
+  @override
+  Future<void> cancelBookingNotification(int notificationId) async {}
+}
