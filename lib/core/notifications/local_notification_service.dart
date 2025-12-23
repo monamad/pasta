@@ -119,8 +119,8 @@ class LocalNotificationService implements ILocalNotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      // uiLocalNotificationDateInterpretation:
+      //     UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: null,
       payload: notificationId.toString(),
     );
