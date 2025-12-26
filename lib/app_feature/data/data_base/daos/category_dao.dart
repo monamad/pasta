@@ -6,6 +6,7 @@ abstract class ICategoryDao {
   Future<List<CategoryData>> getAllCategories();
   Future<CategoryData?> getCategoryById(int id);
   Future<int> insertCategory(CategoryCompanion entry);
+  Future<double> getCategoryPriceById(int id);
 }
 
 @DriftAccessor(tables: [Category])
@@ -22,4 +23,8 @@ class CategoryDao extends DatabaseAccessor<AppDatabase>
   @override
   Future<CategoryData?> getCategoryById(int id) =>
       (select(category)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+
+  @override
+  Future<double> getCategoryPriceById(int id) =>
+      getCategoryById(id).then((cat) => cat!.pricePerHour);
 }

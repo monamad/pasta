@@ -27,3 +27,50 @@ String formatDateTime(DateTime dt) {
   final mo = dt.month.toString().padLeft(2, '0');
   return '$time  $d/$mo/${dt.year}';
 }
+
+DateTime nowDateTime() {
+  return DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+    DateTime.now().hour,
+    DateTime.now().minute,
+    DateTime.now().second,
+  );
+}
+
+double diffInHours(DateTime start, DateTime end) =>
+    start.difference(end).inMinutes / 60;
+
+bool isTimeEqualByMinute(DateTime a, DateTime b) {
+  return a.difference(b).inMinutes == 0;
+}
+  String formatTime(DateTime dateTime) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final month = months[dateTime.month - 1];
+    final day = dateTime.day;
+    final year = dateTime.year;
+    
+    int hour = dateTime.hour;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    
+    if (hour > 12) {
+      hour -= 12;
+    } else if (hour == 0) {
+      hour = 12;
+    }
+    
+    return '$month $day, $year at $hour:$minute $period';
+  }
+
+  DateTime removeMilliseconds(DateTime dateTime) {
+  return DateTime(
+    dateTime.year,
+    dateTime.month,
+    dateTime.day,
+    dateTime.hour,
+    dateTime.minute,
+    dateTime.second,
+  );
+}

@@ -43,6 +43,7 @@ class GameTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   IntColumn get categoryId => integer().references(Category, #id)();
+  BoolColumn get isOccupied => boolean().withDefault(Constant(false))();
 }
 
 @DataClassName('SessionData')
@@ -58,5 +59,23 @@ class Session extends Table {
   RealColumn get totalPrice => real().nullable()();
   RealColumn get hourPrice => real()();
 
-  BoolColumn get status => boolean().withDefault(const Constant(true))();
+  TextColumn get status => text()
+      .map(const SessionStatusConverter())
+      .withDefault(Constant(SessionStatus.done.name))();
+}
+
+enum SessionStatus { done, occupied, reserved }
+
+class SessionStatusConverter extends TypeConverter<SessionStatus, String> {
+  const SessionStatusConverter();
+
+  @override
+  SessionStatus fromSql(String fromDb) {
+    return SessionStatus.values.firstWhere((e) => e.name == fromDb);
+  }
+
+  @override
+  String toSql(SessionStatus value) {
+    return value.name;
+  }
 }

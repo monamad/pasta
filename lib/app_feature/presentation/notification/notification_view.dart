@@ -6,8 +6,35 @@ import 'package:pasta/core/helper/functions.dart';
 import 'package:pasta/core/theme/app_colors.dart';
 import 'package:pasta/core/theme/app_style.dart';
 
-class NotificationView extends StatelessWidget {
+class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
+
+  @override
+  State<NotificationView> createState() => _NotificationViewState();
+}
+
+class _NotificationViewState extends State<NotificationView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToHighlighted(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        final itemHeight = 200.h; // Approximate height of card + separator
+        final targetPosition = index * itemHeight;
+        _scrollController.animateTo(
+          targetPosition + 16.h,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +59,18 @@ class NotificationView extends StatelessWidget {
               return const Center(child: Text('No notifications yet'));
             }
 
+            // Scroll to highlighted item if present
+            if (highlightId != null) {
+              final highlightIndex = doneSessions.indexWhere(
+                (s) => s.session.id == highlightId,
+              );
+              if (highlightIndex != -1) {
+                _scrollToHighlighted(highlightIndex);
+              }
+            }
+
             return ListView.separated(
+              controller: _scrollController,
               padding: EdgeInsets.all(16.w),
               itemCount: doneSessions.length,
               separatorBuilder: (context, index) => SizedBox(height: 12.h),

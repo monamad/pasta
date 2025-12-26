@@ -5,6 +5,7 @@ import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/logic/start_new_session/start_new_session_cubit.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/custom_button.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/app_time_picker.dart';
+import 'package:pasta/app_feature/presentation/start_new_session/widgets/select_busy_table_section.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/select_duration_section.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/select_table_section.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/widgets/session_type_selector.dart';
@@ -20,14 +21,27 @@ class StartNewSessionView extends StatelessWidget {
       appBar: AppBar(title: Text('Start New Session')),
       body: BlocConsumer<StartNewSessionCubit, StartNewSessionState>(
         buildWhen: (previous, current) => current is! StartNewSessionSubmitted,
+        listenWhen: (previous, current) {
+      
+          if (current is StartNewSessionSubmitError) return true;
+          return previous != current;
+        },
         listener: (context, state) {
           if (state is StartNewSessionSubmitted) {
             Navigator.of(context).pop(true);
           } else if (state is StartNewSessionSubmitError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${state.message}'),
-                backgroundColor: Colors.red,
+            // Show a dialog for better visibility of multiple conflicts
+            showDialog(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Reservation Conflict'),
+                content: SingleChildScrollView(child: Text(state.message)),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
             );
           } else if (state is StartNewSessionError) {
@@ -51,8 +65,9 @@ class StartNewSessionView extends StatelessWidget {
           }
 
           if (state is StartNewSessionDataLoaded &&
-              state.availableTables.isEmpty) {
-            return const Center(child: Text('No available tables.'));
+              state.availableTables.isEmpty &&
+              state.busyTables.isEmpty) {
+            return const Center(child: Text('No tables found.'));
           }
 
           return SingleChildScrollView(
@@ -64,10 +79,35 @@ class StartNewSessionView extends StatelessWidget {
                   SizedBox(height: 16.h),
                   Text("Session Details", style: AppTextStyles.bold24),
                   SizedBox(height: 20.h),
-                  Text('Select Table', style: AppTextStyles.regular16),
+                  Text('Available Tables', style: AppTextStyles.regular16),
                   SizedBox(height: 10.h),
                   SelectTableSection(),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h),
+                  BlocBuilder<StartNewSessionCubit, StartNewSessionState>(
+                    builder: (context, state) {
+                      if (state is StartNewSessionDataLoaded ||
+                          state is StartNewSessionSubmitError) {
+                        final busyTables = state is StartNewSessionDataLoaded
+                            ? state.busyTables
+                            : (state as StartNewSessionSubmitError).busyTables;
+                        if (busyTables.isNotEmpty) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Busy Tables',
+                                style: AppTextStyles.regular16,
+                              ),
+                              SizedBox(height: 10.h),
+                              SelectBusyTableSection(),
+                              SizedBox(height: 20.h),
+                            ],
+                          );
+                        }
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                   Text('Start time', style: AppTextStyles.regular16),
                   SizedBox(height: 10.h),
                   // Start Time

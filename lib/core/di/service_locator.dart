@@ -73,6 +73,10 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton<StatisticsRepository>(
-    () => StatisticsRepository(getIt<ISessionDao>(), getIt<ICategoryDao>()),
+    () => StatisticsRepository(
+      getIt<ISessionDao>(),
+      getIt<ICategoryDao>(),
+      getIt<ITableDao>(),
+    ),
   );
 }

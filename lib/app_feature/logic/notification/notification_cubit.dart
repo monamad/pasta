@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pasta/app_feature/data/repos/session_repository.dart';
-import 'package:pasta/app_feature/data/session_model_with_details.dart';
+import 'package:pasta/app_feature/data/models/session_model_with_details.dart';
 
 part 'notification_state.dart';
 

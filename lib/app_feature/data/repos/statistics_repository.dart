@@ -1,13 +1,15 @@
 import 'package:pasta/app_feature/data/data_base/daos/session_dao.dart';
 import 'package:pasta/app_feature/data/data_base/daos/category_dao.dart';
+import 'package:pasta/app_feature/data/data_base/daos/table_dao.dart';
 import 'package:pasta/app_feature/data/models/statistics_models.dart';
 import 'package:pasta/core/helper/functions.dart';
 
 class StatisticsRepository {
   final ISessionDao _sessionDao;
   final ICategoryDao _categoryDao;
+  final ITableDao _tableDao;
 
-  StatisticsRepository(this._sessionDao, this._categoryDao);
+  StatisticsRepository(this._sessionDao, this._categoryDao, this._tableDao);
 
   Future<OverallStats> getOverallStats() async {
     final now = DateTime.now();
@@ -173,9 +175,13 @@ class StatisticsRepository {
       double totalMinutes = 0;
       int sessionCount = 0;
 
-      // Get sessions that match this category's price
+      // Get sessions that match this category by joining through the table
       for (final session in allSessions) {
-        if (session.hourPrice == category.pricePerHour) {
+        // Get the table for this session
+        final table = await _tableDao.getTableById(session.tableId);
+
+        // Check if this session's table belongs to the current category
+        if (table != null && table.categoryId == category.id) {
           sessionCount++;
           totalRevenue += session.totalPrice ?? 0;
           if (session.actualEndTime != null) {

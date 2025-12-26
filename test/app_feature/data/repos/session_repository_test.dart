@@ -179,6 +179,7 @@ void main() {
 
         // Create session directly with past start time
         final sessionId = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
           tableId: tableId,
           startTime: DateTime.now().subtract(Duration(minutes: 30)),
         );
@@ -190,11 +191,65 @@ void main() {
       },
     );
 
+    test(
+      'endSession - early termination with more than 1 minute should be counted',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 60.0);
+        final tableId = await _createTable(db, 'Console 1', categoryId);
+
+        // Start session with 2 hour expected duration
+        final sessionId = await repository.startSession(
+          startTime: DateTime.now().subtract(Duration(minutes: 5)),
+          tableId: tableId,
+          durationHours: 2.0,
+        );
+
+        // End after only 5 minutes (before expected end time)
+        final totalPrice = await repository.endSession(sessionId);
+
+        // Should be counted as valid session (5 minutes > 1 minute)
+        expect(totalPrice, greaterThan(0.0));
+        expect(totalPrice, closeTo(5.0, 1.0)); // 5 minutes * 60/60 = 5
+
+        final session = await db.sessionDao.getSessionById(sessionId);
+        expect(session!.actualEndTime, isNotNull);
+        expect(session.totalPrice, isNotNull);
+      },
+    );
+
+    test(
+      'endSession - early termination with less than 1 minute should not be counted',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 60.0);
+        final tableId = await _createTable(db, 'Console 1', categoryId);
+
+        // Start session with expected duration
+        final sessionId = await repository.startSession(
+          startTime: DateTime.now().subtract(Duration(seconds: 30)),
+          tableId: tableId,
+          durationHours: 2.0,
+        );
+
+        // End after only 30 seconds (< 1 minute)
+        final totalPrice = await repository.endSession(sessionId);
+
+        // Should not be counted (less than 1 minute)
+        expect(totalPrice, 0.0);
+
+        final SessionData? session = await db.sessionDao.getSessionById(
+          sessionId,
+        );
+        // Session should be removed
+        expect(session, isNull);
+      },
+    );
+
     test('endSession - should calculate correct price for 1 hour', () async {
       final categoryId = await _createCategory(db, 'Console', 100.0);
       final tableId = await _createTable(db, 'Console 1', categoryId);
 
       final sessionId = await db.sessionDao.createNewSession(
+        sessionStatus: SessionStatus.occupied,
         tableId: tableId,
         startTime: DateTime.now().subtract(Duration(hours: 1)),
       );
@@ -209,6 +264,7 @@ void main() {
       final tableId = await _createTable(db, 'VIP 1', categoryId);
 
       final sessionId = await db.sessionDao.createNewSession(
+        sessionStatus: SessionStatus.occupied,
         tableId: tableId,
         startTime: DateTime.now().subtract(Duration(minutes: 150)),
       );
@@ -246,8 +302,120 @@ void main() {
     });
   });
 
+  group('SessionRepository - Extend Session', () {
+    test('extendSession - should update expected end time correctly', () async {
+      final categoryId = await _createCategory(db, 'Console', 60.0);
+      final tableId = await _createTable(db, 'Console 1', categoryId);
+
+      // Start session with 1 hour duration
+      final sessionId = await repository.startSession(
+        startTime: DateTime.now(),
+        tableId: tableId,
+        durationHours: 1.0,
+      );
+
+      var session = await db.sessionDao.getSessionById(sessionId);
+      final originalExpectedEnd = session!.expectedEndTime;
+
+      // Extend by 2 more hours
+      final additionalHours = 2.0;
+      final newExpectedEnd = DateTime.now().add(
+        Duration(minutes: (additionalHours * 60).toInt()),
+      );
+
+      await db.sessionDao.updateSession(
+        session.copyWith(expectedEndTime: Value(newExpectedEnd)),
+      );
+
+      session = await db.sessionDao.getSessionById(sessionId);
+      expect(session!.expectedEndTime, isNotNull);
+      expect(session.expectedEndTime!.isAfter(originalExpectedEnd!), isTrue);
+    });
+  });
+
+  group('SessionRepository - Future Scheduled Sessions', () {
+    test(
+      'futureSession - session scheduled in future should not count as running',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 60.0);
+        final tableId = await _createTable(db, 'Console 1', categoryId);
+
+        // Schedule session to start 1 hour in the future
+        final futureStartTime = DateTime.now().add(Duration(hours: 1));
+        await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
+          tableId: tableId,
+          startTime: futureStartTime,
+        );
+
+        final runningSessions = await repository.getRunningSessions();
+
+        // Should not appear in running sessions (start time hasn't come yet)
+        expect(runningSessions, isEmpty);
+      },
+    );
+
+    test('futureSession - ending before start time', () async {
+      final categoryId = await _createCategory(db, 'Console', 60.0);
+      final tableId = await _createTable(db, 'Console 1', categoryId);
+
+      // Schedule session in future
+      final futureStartTime = DateTime.now().add(Duration(hours: 1));
+      final sessionId = await repository.startSession(
+        tableId: tableId,
+        startTime: futureStartTime,
+      );
+
+      // Try to end it before it starts it shoould remove the session and return 0 price
+      final totalPrice = await repository.endSession(sessionId);
+      expect(totalPrice, 0.0);
+      final session = await db.sessionDao.getSessionById(sessionId);
+      expect(session, isNull);
+    });
+
+    test(
+      'futureSession - started but less than 1 minute should not be counted',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 60.0);
+        final tableId = await _createTable(db, 'Console 1', categoryId);
+
+        // Session that started 30 seconds ago
+        final sessionId = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
+          tableId: tableId,
+          startTime: DateTime.now().subtract(Duration(seconds: 30)),
+        );
+
+        final totalPrice = await repository.endSession(sessionId);
+
+        // Less than 1 minute should not be counted
+        expect(totalPrice, 0.0);
+      },
+    );
+
+    test(
+      'futureSession - should count as running once start time arrives',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 60.0);
+        final tableId = await _createTable(db, 'Console 1', categoryId);
+
+        // Session that started 2 minutes ago (in the past but recent)
+        await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
+          tableId: tableId,
+          startTime: DateTime.now().subtract(Duration(minutes: 2)),
+        );
+
+        final runningSessions = await repository.getRunningSessions();
+
+        // Should appear in running sessions
+        expect(runningSessions.length, 1);
+      },
+    );
+  });
+
   group('SessionRepository - Get Running Sessions', () {
-    test('getRunning - should return all running sessions', () async {
+    test('getRunningSessions - should return all running sessions', () async {
       final categoryId = await _createCategory(db, 'Console', 50.0);
       final tableId1 = await _createTable(db, 'Console 1', categoryId);
       final tableId2 = await _createTable(db, 'Console 2', categoryId);
@@ -261,14 +429,14 @@ void main() {
         tableId: tableId2,
       );
 
-      final runningSessions = await repository.getRunning();
+      final runningSessions = await repository.getRunningSessions();
 
       expect(runningSessions.length, 2);
       expect(runningSessions.any((s) => s.session.id == sessionId1), isTrue);
       expect(runningSessions.any((s) => s.session.id == sessionId2), isTrue);
     });
 
-    test('getRunning - should exclude ended sessions', () async {
+    test('getRunningSessions - should exclude ended sessions', () async {
       final categoryId = await _createCategory(db, 'Console', 50.0);
       final tableId1 = await _createTable(db, 'Console 1', categoryId);
       final tableId2 = await _createTable(db, 'Console 2', categoryId);
@@ -283,23 +451,23 @@ void main() {
       );
       await repository.endSession(sessionId1);
 
-      final runningSessions = await repository.getRunning();
+      final runningSessions = await repository.getRunningSessions();
 
       expect(runningSessions.length, 1);
       expect(runningSessions[0].session.id, sessionId2);
     });
 
     test(
-      'getRunning - should return empty list when no running sessions',
+      'getRunningSessions - should return empty list when no running sessions',
       () async {
-        final runningSessions = await repository.getRunning();
+        final runningSessions = await repository.getRunningSessions();
 
         expect(runningSessions, isEmpty);
       },
     );
 
     test(
-      'getRunning - should return empty list when all sessions ended',
+      'getRunningSessions - should return empty list when all sessions ended',
       () async {
         final categoryId = await _createCategory(db, 'Console', 50.0);
         final tableId1 = await _createTable(db, 'Console 1', categoryId);
@@ -316,7 +484,7 @@ void main() {
         await repository.endSession(sessionId1);
         await repository.endSession(sessionId2);
 
-        final runningSessions = await repository.getRunning();
+        final runningSessions = await repository.getRunningSessions();
 
         expect(runningSessions, isEmpty);
       },
@@ -338,6 +506,7 @@ void main() {
 
         // Create and end first session
         final sessionId1 = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
           tableId: tableId1,
           startTime: DateTime.now().subtract(Duration(minutes: 60)),
         );
@@ -345,6 +514,7 @@ void main() {
 
         // Create and end second session
         final sessionId2 = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
           tableId: tableId2,
           startTime: DateTime.now().subtract(Duration(minutes: 30)),
         );
@@ -365,6 +535,7 @@ void main() {
 
       // End one session
       final sessionId1 = await db.sessionDao.createNewSession(
+        sessionStatus: SessionStatus.occupied,
         tableId: tableId1,
         startTime: DateTime.now().subtract(Duration(minutes: 60)),
       );
@@ -395,12 +566,14 @@ void main() {
         final tableId2 = await _createTable(db, 'Console 2', categoryId);
 
         final sessionId1 = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
           tableId: tableId1,
           startTime: DateTime.now().subtract(Duration(minutes: 60)),
         );
         await repository.endSession(sessionId1);
 
         final sessionId2 = await db.sessionDao.createNewSession(
+          sessionStatus: SessionStatus.occupied,
           tableId: tableId2,
           startTime: DateTime.now().subtract(Duration(minutes: 120)),
         );
@@ -449,27 +622,30 @@ void main() {
   });
 
   group('SessionDao - Direct Methods', () {
-    test('getRunningsessionCount - should return correct count', () async {
-      final categoryId = await _createCategory(db, 'Console', 50.0);
-      final tableId1 = await _createTable(db, 'Console 1', categoryId);
-      final tableId2 = await _createTable(db, 'Console 2', categoryId);
+    test(
+      'getRunningSessionCount - should return correct count',
+      () async {
+        final categoryId = await _createCategory(db, 'Console', 50.0);
+        final tableId1 = await _createTable(db, 'Console 1', categoryId);
+        final tableId2 = await _createTable(db, 'Console 2', categoryId);
 
-      await repository.startSession(
-        startTime: DateTime.now(),
-        tableId: tableId1,
-      );
-      await repository.startSession(
-        startTime: DateTime.now(),
-        tableId: tableId2,
-      );
+        await repository.startSession(
+          startTime: DateTime.now(),
+          tableId: tableId1,
+        );
+        await repository.startSession(
+          startTime: DateTime.now(),
+          tableId: tableId2,
+        );
 
-      final count = await db.sessionDao.getRunningSessionCount();
+        final count = await db.sessionDao.getRunningSessionCount();
 
-      expect(count, 2);
-    });
+        expect(count, 2);
+      },
+    );
 
     test(
-      'getRunningsessionCount - should return 0 when no running sessions',
+      'getRunningSessionCount - should return 0 when no running sessions',
       () async {
         final count = await db.sessionDao.getRunningSessionCount();
         expect(count, 0);
@@ -477,30 +653,12 @@ void main() {
     );
 
     test(
-      'getRunningSessionByTableId - should return session for specific table',
-      () async {
-        final categoryId = await _createCategory(db, 'Console', 50.0);
-        final tableId = await _createTable(db, 'Console 1', categoryId);
-        final sessionId = await repository.startSession(
-          startTime: DateTime.now(),
-          tableId: tableId,
-        );
-
-        final session = await db.sessionDao.getRunningSessionByTableId(tableId);
-
-        expect(session, isNotNull);
-        expect(session!.id, sessionId);
-        expect(session.tableId, tableId);
-      },
-    );
-
-    test(
-      'getRunningSessionByTableId - should return null when table free',
+      'getRunningSessionsSessionByTableId - should return null when table free',
       () async {
         final categoryId = await _createCategory(db, 'Console', 50.0);
         final tableId = await _createTable(db, 'Console 1', categoryId);
 
-        final session = await db.sessionDao.getRunningSessionByTableId(tableId);
+        final session = await db.tableDao.getTableStatus(tableId);
 
         expect(session, isNull);
       },

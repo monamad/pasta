@@ -6,24 +6,27 @@ abstract class ISessionDao {
   Future<List<SessionData>> getAllsession();
   Future<SessionData?> getSessionById(int id);
   Future<List<SessionData>> getRunningSessions();
+  Future<List<SessionData>> getDoneSessions();
   Future<int> getRunningSessionCount();
-  Future<SessionData?> getRunningSessionByTableId(int tableId);
+  Future<List<SessionData>> getReservedSessions();
+  Future<List<SessionData>> getActiveSessionsForTable(int tableId);
   Future<int> createNewSession({
     required int tableId,
     DateTime? startTime,
     DateTime? expectedEndTime,
+    required SessionStatus sessionStatus,
   });
   Future<double> endSession(
     int sessionId,
     double totalPrice,
     DateTime? endedTime,
+    SessionStatus sessionStatus,
   );
   Future<void> updateSession(SessionData session);
   Future<List<SessionData>> getSessionsByDateRange(
     DateTime start,
     DateTime end,
   );
-  Future<List<SessionData>> getDoneSessions();
 }
 
 @DriftAccessor(tables: [Session])
@@ -40,56 +43,27 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
       (select(session)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   @override
   Future<List<SessionData>> getRunningSessions() async {
-    //ToDo optimize sorting at the query level
     final sessions = await (select(
       session,
-    )..where((tbl) => tbl.actualEndTime.isNull())).get();
-
-    final now = DateTime.now();
-
-    sessions.sort((a, b) {
-      final aDuration = a.expectedEndTime != null
-          ? a.expectedEndTime!.difference(now)
-          : const Duration(days: 365 * 100);
-      final bDuration = b.expectedEndTime != null
-          ? b.expectedEndTime!.difference(now)
-          : const Duration(days: 365 * 100);
-      return aDuration.compareTo(bDuration);
-    });
+    )..where((ses) => ses.status.equals(SessionStatus.occupied.name))).get();
 
     return sessions;
   }
-
-  @override
-  Future<int> getRunningSessionCount() async {
-    final query = selectOnly(session)
-      ..addColumns([session.id.count()])
-      ..where(session.actualEndTime.isNull());
-
-    final result = await query.getSingle();
-    return result.read(session.id.count()) ?? 0;
-  }
-
-  @override
-  Future<SessionData?> getRunningSessionByTableId(int tableId) =>
-      (select(session)
-            ..where((tbl) => tbl.tableId.equals(tableId))
-            ..where((tbl) => tbl.actualEndTime.isNull()))
-          .getSingleOrNull();
 
   @override
   Future<int> createNewSession({
     required int tableId,
     DateTime? startTime,
     DateTime? expectedEndTime,
+    required SessionStatus sessionStatus,
   }) async {
-   
     final tableData = await (select(
       gameTable,
     )..where((tbl) => tbl.id.equals(tableId))).getSingleOrNull();
     if (tableData == null) {
       throw Exception('tableData not found');
     }
+    //get category price
     final categoryData = await (select(
       category,
     )..where((tbl) => tbl.id.equals(tableData.categoryId))).getSingleOrNull();
@@ -102,6 +76,7 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
             ? Value(expectedEndTime)
             : Value(null),
         hourPrice: categoryData!.pricePerHour,
+        status: Value(sessionStatus),
       ),
     );
   }
@@ -111,6 +86,7 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
     int sessionId,
     double totalPrice,
     DateTime? endedTime,
+    SessionStatus sessionStatus,
   ) async {
     //canceled session
     if (totalPrice <= 0) {
@@ -122,6 +98,7 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
       SessionCompanion(
         actualEndTime: Value(endedTime ?? DateTime.now()),
         totalPrice: Value(totalPrice),
+        status: Value(sessionStatus),
       ),
     );
     return totalPrice;
@@ -145,10 +122,40 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
   }
 
   @override
+  Future<int> getRunningSessionCount() async {
+    print(await getAllsession());
+    final query = selectOnly(session)
+      ..addColumns([session.id.count()])
+      ..where(session.status.equals(SessionStatus.occupied.name));
+
+    final result = await query.getSingle();
+    return result.read(session.id.count()) ?? 0;
+  }
+
+  @override
   Future<List<SessionData>> getDoneSessions() {
     return (select(session)
-          ..where((tbl) => tbl.actualEndTime.isNotNull())
+          ..where((tbl) => tbl.status.equals(SessionStatus.done.name))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.actualEndTime)]))
+        .get();
+  }
+
+  @override
+  Future<List<SessionData>> getReservedSessions() {
+    return (select(
+      session,
+    )..where((tbl) => tbl.status.equals(SessionStatus.reserved.name))).get();
+  }
+
+  @override
+  Future<List<SessionData>> getActiveSessionsForTable(int tableId) {
+    return (select(session)
+          ..where((tbl) => tbl.tableId.equals(tableId))
+          ..where(
+            (tbl) =>
+                tbl.status.equals(SessionStatus.occupied.name) |
+                tbl.status.equals(SessionStatus.reserved.name),
+          ))
         .get();
   }
 }
