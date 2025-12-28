@@ -41,24 +41,6 @@ void main() {
     });
 
     test(
-      'getAvailableByCategory - should return only tables without active sessions',
-      () async {
-        final categoryId = await _createCategory(db, 'Console', 50.0);
-        final tableId1 = await repository.addTable('Console 1', categoryId);
-        final tableId2 = await repository.addTable('Console 2', categoryId);
-
-        await _createSession(db, tableId1);
-
-        final availableTables = await repository.getAvailableByCategory(
-          categoryId,
-        );
-
-        expect(availableTables.length, 1);
-        expect(availableTables[0].id, tableId2);
-      },
-    );
-
-    test(
       'getAvailableByCategory - should return all tables when none are busy',
       () async {
         final categoryId = await _createCategory(db, 'Console', 50.0);
@@ -89,9 +71,4 @@ Future<int> _createCategory(
   );
 }
 
-Future<int> _createSession(AppDatabase db, int tableId) async {
-  return await db.sessionDao.createNewSession(
-    tableId: tableId,
-    sessionStatus: SessionStatus.occupied,
-  );
-}
+

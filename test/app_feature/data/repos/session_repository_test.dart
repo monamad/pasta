@@ -41,7 +41,7 @@ void main() {
         expect(session!.tableId, tableId);
         expect(session.actualEndTime, isNull);
         expect(session.hourPrice, 50.0);
-        expect(session.status, isTrue);
+        expect(session.status, SessionStatus.occupied);
         expect(session.totalPrice, isNull);
       },
     );
@@ -140,7 +140,9 @@ void main() {
         ),
         throwsA(
           predicate(
-            (e) => e is Exception && e.toString().contains('already busy'),
+            (e) =>
+                e is Exception &&
+                e.toString().contains('Table has conflicting reservations'),
           ),
         ),
       );
@@ -343,7 +345,7 @@ void main() {
         // Schedule session to start 1 hour in the future
         final futureStartTime = DateTime.now().add(Duration(hours: 1));
         await db.sessionDao.createNewSession(
-          sessionStatus: SessionStatus.occupied,
+          sessionStatus: SessionStatus.reserved,
           tableId: tableId,
           startTime: futureStartTime,
         );
@@ -622,27 +624,24 @@ void main() {
   });
 
   group('SessionDao - Direct Methods', () {
-    test(
-      'getRunningSessionCount - should return correct count',
-      () async {
-        final categoryId = await _createCategory(db, 'Console', 50.0);
-        final tableId1 = await _createTable(db, 'Console 1', categoryId);
-        final tableId2 = await _createTable(db, 'Console 2', categoryId);
+    test('getRunningSessionCount - should return correct count', () async {
+      final categoryId = await _createCategory(db, 'Console', 50.0);
+      final tableId1 = await _createTable(db, 'Console 1', categoryId);
+      final tableId2 = await _createTable(db, 'Console 2', categoryId);
 
-        await repository.startSession(
-          startTime: DateTime.now(),
-          tableId: tableId1,
-        );
-        await repository.startSession(
-          startTime: DateTime.now(),
-          tableId: tableId2,
-        );
+      await repository.startSession(
+        startTime: DateTime.now(),
+        tableId: tableId1,
+      );
+      await repository.startSession(
+        startTime: DateTime.now(),
+        tableId: tableId2,
+      );
 
-        final count = await db.sessionDao.getRunningSessionCount();
+      final count = await db.sessionDao.getRunningSessionCount();
 
-        expect(count, 2);
-      },
-    );
+      expect(count, 2);
+    });
 
     test(
       'getRunningSessionCount - should return 0 when no running sessions',
@@ -660,7 +659,7 @@ void main() {
 
         final session = await db.tableDao.getTableStatus(tableId);
 
-        expect(session, isNull);
+        expect(session, false);
       },
     );
 

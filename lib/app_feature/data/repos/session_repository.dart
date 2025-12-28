@@ -182,7 +182,6 @@ class SessionRepository {
   Future<List<SessionWithDetails>> getRunningSessions() async {
     final sessions = await _sessionDao.getRunningSessions();
     final now = DateTime.now();
-
     sessions.sort((a, b) {
       final aDuration = a.expectedEndTime != null
           ? a.expectedEndTime!.difference(now)

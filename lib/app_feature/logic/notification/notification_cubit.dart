@@ -7,7 +7,7 @@ part 'notification_state.dart';
 
 class NotificationCubit extends Cubit<NotificationState> {
   final SessionRepository _sessionRepository;
-  static const int _pageSize = 22;
+  static const int _pageSize = 30;
 
   NotificationCubit(this._sessionRepository) : super(NotificationInitial());
 
@@ -20,7 +20,6 @@ class NotificationCubit extends Cubit<NotificationState> {
       );
 
       final hasMore = doneSessions.length == _pageSize;
-      print('Loaded more notifications, hasMore: $hasMore');
 
       emit(
         NotificationLoaded(
