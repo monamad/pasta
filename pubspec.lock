@@ -351,7 +351,7 @@ packages:
     source: hosted
     version: "9.1.0"
   flutter_local_notifications_windows:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_local_notifications_windows
       sha256: "8d658f0d367c48bd420e7cf2d26655e2d1130147bca1eea917e576ca76668aaf"

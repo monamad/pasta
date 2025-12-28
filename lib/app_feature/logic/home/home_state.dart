@@ -16,12 +16,14 @@ final class HomeLoaded extends HomeState {
   final List<CategoryData> categories;
   final int totalBusyTables;
   final double totalTodayRevenue;
+  final List<SessionWithDetails> reservedSessions;
   HomeLoaded({
     required this.activeSessions,
     required this.doneSessions,
     required this.categories,
     required this.totalBusyTables,
     required this.totalTodayRevenue,
+    required this.reservedSessions,
   });
 
   HomeLoaded copyWith({
@@ -30,6 +32,7 @@ final class HomeLoaded extends HomeState {
     List<CategoryData>? categories,
     int? totalBusyTables,
     double? totalTodayRevenue,
+    List<SessionWithDetails>? reservedSessions,
   }) {
     return HomeLoaded(
       activeSessions: activeSessions ?? this.activeSessions,
@@ -37,6 +40,7 @@ final class HomeLoaded extends HomeState {
       categories: categories ?? this.categories,
       totalBusyTables: totalBusyTables ?? this.totalBusyTables,
       totalTodayRevenue: totalTodayRevenue ?? this.totalTodayRevenue,
+      reservedSessions: reservedSessions ?? this.reservedSessions,
     );
   }
 
@@ -47,6 +51,7 @@ final class HomeLoaded extends HomeState {
     categories,
     totalBusyTables,
     totalTodayRevenue,
+    reservedSessions,
   ];
 }
 

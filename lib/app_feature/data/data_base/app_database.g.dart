@@ -299,8 +299,23 @@ class $GameTableTable extends GameTable
       'REFERENCES category (id)',
     ),
   );
+  static const VerificationMeta _isOccupiedMeta = const VerificationMeta(
+    'isOccupied',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, categoryId];
+  late final GeneratedColumn<bool> isOccupied = GeneratedColumn<bool>(
+    'is_occupied',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_occupied" IN (0, 1))',
+    ),
+    defaultValue: Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, categoryId, isOccupied];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -332,6 +347,12 @@ class $GameTableTable extends GameTable
     } else if (isInserting) {
       context.missing(_categoryIdMeta);
     }
+    if (data.containsKey('is_occupied')) {
+      context.handle(
+        _isOccupiedMeta,
+        isOccupied.isAcceptableOrUnknown(data['is_occupied']!, _isOccupiedMeta),
+      );
+    }
     return context;
   }
 
@@ -353,6 +374,10 @@ class $GameTableTable extends GameTable
         DriftSqlType.int,
         data['${effectivePrefix}category_id'],
       )!,
+      isOccupied: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_occupied'],
+      )!,
     );
   }
 
@@ -366,10 +391,12 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
   final int id;
   final String name;
   final int categoryId;
+  final bool isOccupied;
   const GameTableData({
     required this.id,
     required this.name,
     required this.categoryId,
+    required this.isOccupied,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -377,6 +404,7 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['category_id'] = Variable<int>(categoryId);
+    map['is_occupied'] = Variable<bool>(isOccupied);
     return map;
   }
 
@@ -385,6 +413,7 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
       id: Value(id),
       name: Value(name),
       categoryId: Value(categoryId),
+      isOccupied: Value(isOccupied),
     );
   }
 
@@ -397,6 +426,7 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       categoryId: serializer.fromJson<int>(json['categoryId']),
+      isOccupied: serializer.fromJson<bool>(json['isOccupied']),
     );
   }
   @override
@@ -406,15 +436,21 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'categoryId': serializer.toJson<int>(categoryId),
+      'isOccupied': serializer.toJson<bool>(isOccupied),
     };
   }
 
-  GameTableData copyWith({int? id, String? name, int? categoryId}) =>
-      GameTableData(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        categoryId: categoryId ?? this.categoryId,
-      );
+  GameTableData copyWith({
+    int? id,
+    String? name,
+    int? categoryId,
+    bool? isOccupied,
+  }) => GameTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    categoryId: categoryId ?? this.categoryId,
+    isOccupied: isOccupied ?? this.isOccupied,
+  );
   GameTableData copyWithCompanion(GameTableCompanion data) {
     return GameTableData(
       id: data.id.present ? data.id.value : this.id,
@@ -422,6 +458,9 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
       categoryId: data.categoryId.present
           ? data.categoryId.value
           : this.categoryId,
+      isOccupied: data.isOccupied.present
+          ? data.isOccupied.value
+          : this.isOccupied,
     );
   }
 
@@ -430,46 +469,53 @@ class GameTableData extends DataClass implements Insertable<GameTableData> {
     return (StringBuffer('GameTableData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('categoryId: $categoryId')
+          ..write('categoryId: $categoryId, ')
+          ..write('isOccupied: $isOccupied')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, categoryId);
+  int get hashCode => Object.hash(id, name, categoryId, isOccupied);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GameTableData &&
           other.id == this.id &&
           other.name == this.name &&
-          other.categoryId == this.categoryId);
+          other.categoryId == this.categoryId &&
+          other.isOccupied == this.isOccupied);
 }
 
 class GameTableCompanion extends UpdateCompanion<GameTableData> {
   final Value<int> id;
   final Value<String> name;
   final Value<int> categoryId;
+  final Value<bool> isOccupied;
   const GameTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.isOccupied = const Value.absent(),
   });
   GameTableCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required int categoryId,
+    this.isOccupied = const Value.absent(),
   }) : name = Value(name),
        categoryId = Value(categoryId);
   static Insertable<GameTableData> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? categoryId,
+    Expression<bool>? isOccupied,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (categoryId != null) 'category_id': categoryId,
+      if (isOccupied != null) 'is_occupied': isOccupied,
     });
   }
 
@@ -477,11 +523,13 @@ class GameTableCompanion extends UpdateCompanion<GameTableData> {
     Value<int>? id,
     Value<String>? name,
     Value<int>? categoryId,
+    Value<bool>? isOccupied,
   }) {
     return GameTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       categoryId: categoryId ?? this.categoryId,
+      isOccupied: isOccupied ?? this.isOccupied,
     );
   }
 
@@ -497,6 +545,9 @@ class GameTableCompanion extends UpdateCompanion<GameTableData> {
     if (categoryId.present) {
       map['category_id'] = Variable<int>(categoryId.value);
     }
+    if (isOccupied.present) {
+      map['is_occupied'] = Variable<bool>(isOccupied.value);
+    }
     return map;
   }
 
@@ -505,7 +556,8 @@ class GameTableCompanion extends UpdateCompanion<GameTableData> {
     return (StringBuffer('GameTableCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('categoryId: $categoryId')
+          ..write('categoryId: $categoryId, ')
+          ..write('isOccupied: $isOccupied')
           ..write(')'))
         .toString();
   }
@@ -600,19 +652,16 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
-  late final GeneratedColumn<bool> status = GeneratedColumn<bool>(
-    'status',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("status" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
-  );
+  late final GeneratedColumnWithTypeConverter<SessionStatus, String> status =
+      GeneratedColumn<String>(
+        'status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant(SessionStatus.done.name),
+      ).withConverter<SessionStatus>($SessionTable.$converterstatus);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -687,12 +736,6 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
     } else if (isInserting) {
       context.missing(_hourPriceMeta);
     }
-    if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
-    }
     return context;
   }
 
@@ -730,10 +773,12 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
         DriftSqlType.double,
         data['${effectivePrefix}hour_price'],
       )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}status'],
-      )!,
+      status: $SessionTable.$converterstatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}status'],
+        )!,
+      ),
     );
   }
 
@@ -741,6 +786,9 @@ class $SessionTable extends Session with TableInfo<$SessionTable, SessionData> {
   $SessionTable createAlias(String alias) {
     return $SessionTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<SessionStatus, String> $converterstatus =
+      const SessionStatusConverter();
 }
 
 class SessionData extends DataClass implements Insertable<SessionData> {
@@ -751,7 +799,7 @@ class SessionData extends DataClass implements Insertable<SessionData> {
   final DateTime? actualEndTime;
   final double? totalPrice;
   final double hourPrice;
-  final bool status;
+  final SessionStatus status;
   const SessionData({
     required this.id,
     required this.tableId,
@@ -778,7 +826,11 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       map['total_price'] = Variable<double>(totalPrice);
     }
     map['hour_price'] = Variable<double>(hourPrice);
-    map['status'] = Variable<bool>(status);
+    {
+      map['status'] = Variable<String>(
+        $SessionTable.$converterstatus.toSql(status),
+      );
+    }
     return map;
   }
 
@@ -814,7 +866,7 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       actualEndTime: serializer.fromJson<DateTime?>(json['actualEndTime']),
       totalPrice: serializer.fromJson<double?>(json['totalPrice']),
       hourPrice: serializer.fromJson<double>(json['hourPrice']),
-      status: serializer.fromJson<bool>(json['status']),
+      status: serializer.fromJson<SessionStatus>(json['status']),
     );
   }
   @override
@@ -828,7 +880,7 @@ class SessionData extends DataClass implements Insertable<SessionData> {
       'actualEndTime': serializer.toJson<DateTime?>(actualEndTime),
       'totalPrice': serializer.toJson<double?>(totalPrice),
       'hourPrice': serializer.toJson<double>(hourPrice),
-      'status': serializer.toJson<bool>(status),
+      'status': serializer.toJson<SessionStatus>(status),
     };
   }
 
@@ -840,7 +892,7 @@ class SessionData extends DataClass implements Insertable<SessionData> {
     Value<DateTime?> actualEndTime = const Value.absent(),
     Value<double?> totalPrice = const Value.absent(),
     double? hourPrice,
-    bool? status,
+    SessionStatus? status,
   }) => SessionData(
     id: id ?? this.id,
     tableId: tableId ?? this.tableId,
@@ -922,7 +974,7 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
   final Value<DateTime?> actualEndTime;
   final Value<double?> totalPrice;
   final Value<double> hourPrice;
-  final Value<bool> status;
+  final Value<SessionStatus> status;
   const SessionCompanion({
     this.id = const Value.absent(),
     this.tableId = const Value.absent(),
@@ -953,7 +1005,7 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
     Expression<DateTime>? actualEndTime,
     Expression<double>? totalPrice,
     Expression<double>? hourPrice,
-    Expression<bool>? status,
+    Expression<String>? status,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -975,7 +1027,7 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
     Value<DateTime?>? actualEndTime,
     Value<double?>? totalPrice,
     Value<double>? hourPrice,
-    Value<bool>? status,
+    Value<SessionStatus>? status,
   }) {
     return SessionCompanion(
       id: id ?? this.id,
@@ -1014,7 +1066,9 @@ class SessionCompanion extends UpdateCompanion<SessionData> {
       map['hour_price'] = Variable<double>(hourPrice.value);
     }
     if (status.present) {
-      map['status'] = Variable<bool>(status.value);
+      map['status'] = Variable<String>(
+        $SessionTable.$converterstatus.toSql(status.value),
+      );
     }
     return map;
   }
@@ -1318,12 +1372,14 @@ typedef $$GameTableTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       required int categoryId,
+      Value<bool> isOccupied,
     });
 typedef $$GameTableTableUpdateCompanionBuilder =
     GameTableCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<int> categoryId,
+      Value<bool> isOccupied,
     });
 
 final class $$GameTableTableReferences
@@ -1384,6 +1440,11 @@ class $$GameTableTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isOccupied => $composableBuilder(
+    column: $table.isOccupied,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1455,6 +1516,11 @@ class $$GameTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isOccupied => $composableBuilder(
+    column: $table.isOccupied,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CategoryTableOrderingComposer get categoryId {
     final $$CategoryTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -1493,6 +1559,11 @@ class $$GameTableTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get isOccupied => $composableBuilder(
+    column: $table.isOccupied,
+    builder: (column) => column,
+  );
 
   $$CategoryTableAnnotationComposer get categoryId {
     final $$CategoryTableAnnotationComposer composer = $composerBuilder(
@@ -1574,20 +1645,24 @@ class $$GameTableTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> categoryId = const Value.absent(),
+                Value<bool> isOccupied = const Value.absent(),
               }) => GameTableCompanion(
                 id: id,
                 name: name,
                 categoryId: categoryId,
+                isOccupied: isOccupied,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
                 required int categoryId,
+                Value<bool> isOccupied = const Value.absent(),
               }) => GameTableCompanion.insert(
                 id: id,
                 name: name,
                 categoryId: categoryId,
+                isOccupied: isOccupied,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1681,7 +1756,7 @@ typedef $$SessionTableCreateCompanionBuilder =
       Value<DateTime?> actualEndTime,
       Value<double?> totalPrice,
       required double hourPrice,
-      Value<bool> status,
+      Value<SessionStatus> status,
     });
 typedef $$SessionTableUpdateCompanionBuilder =
     SessionCompanion Function({
@@ -1692,7 +1767,7 @@ typedef $$SessionTableUpdateCompanionBuilder =
       Value<DateTime?> actualEndTime,
       Value<double?> totalPrice,
       Value<double> hourPrice,
-      Value<bool> status,
+      Value<SessionStatus> status,
     });
 
 final class $$SessionTableReferences
@@ -1756,9 +1831,10 @@ class $$SessionTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get status => $composableBuilder(
+  ColumnWithTypeConverterFilters<SessionStatus, SessionStatus, String>
+  get status => $composableBuilder(
     column: $table.status,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   $$GameTableTableFilterComposer get tableId {
@@ -1824,7 +1900,7 @@ class $$SessionTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get status => $composableBuilder(
+  ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
@@ -1886,7 +1962,7 @@ class $$SessionTableAnnotationComposer
   GeneratedColumn<double> get hourPrice =>
       $composableBuilder(column: $table.hourPrice, builder: (column) => column);
 
-  GeneratedColumn<bool> get status =>
+  GeneratedColumnWithTypeConverter<SessionStatus, String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
   $$GameTableTableAnnotationComposer get tableId {
@@ -1948,7 +2024,7 @@ class $$SessionTableTableManager
                 Value<DateTime?> actualEndTime = const Value.absent(),
                 Value<double?> totalPrice = const Value.absent(),
                 Value<double> hourPrice = const Value.absent(),
-                Value<bool> status = const Value.absent(),
+                Value<SessionStatus> status = const Value.absent(),
               }) => SessionCompanion(
                 id: id,
                 tableId: tableId,
@@ -1968,7 +2044,7 @@ class $$SessionTableTableManager
                 Value<DateTime?> actualEndTime = const Value.absent(),
                 Value<double?> totalPrice = const Value.absent(),
                 required double hourPrice,
-                Value<bool> status = const Value.absent(),
+                Value<SessionStatus> status = const Value.absent(),
               }) => SessionCompanion.insert(
                 id: id,
                 tableId: tableId,

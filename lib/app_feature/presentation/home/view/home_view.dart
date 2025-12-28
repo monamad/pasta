@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pasta/app_feature/logic/home/home_cubit.dart';
+import 'package:pasta/app_feature/presentation/home/widgets/reserved_sessions_body.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/start_new_session_section.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/active_sessions_section.dart';
 import 'package:pasta/app_feature/presentation/home/widgets/done_sessions_section.dart';
@@ -37,6 +38,8 @@ class HomeView extends StatelessWidget {
                     StatisticsSection(),
                     SizedBox(height: 10.h),
                     ActiveSessionsSection(),
+                    SizedBox(height: 10.h),
+                    ReservedSessionsBody(),
                     SizedBox(height: 10.h),
                     DoneSessionsSection(),
                   ],

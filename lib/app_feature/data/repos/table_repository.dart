@@ -10,29 +10,23 @@ class TableRepository {
     return _dao.getAllTables();
   }
 
-  Future<GameTableData?> getById(int id) {
-    return _dao.getTableById(id);
-  }
-
-  Future<List<GameTableData>> getByCategory(int categoryId) {
-    return _dao.getTablesByCategory(categoryId);
-  }
-
   Future<List<GameTableData>> getAvailableByCategory(int categoryId) {
     return _dao.getAvailableTablesByCategory(categoryId);
   }
 
-  Future<List<GameTableData>> getBusyTables() {
-    return _dao.getBusyTables();
+  Future<List<GameTableData>> getTablesByCategory(int categoryId) {
+    return _dao.getTablesByCategory(categoryId);
+  }
+
+  Future<List<GameTableData>> getbusyTablesByCategory(int categoryId) async {
+    final allTables = await _dao.getTablesByCategory(categoryId);
+
+    return allTables.where((table) => table.isOccupied).toList();
   }
 
   Future<int> addTable(String name, int categoryId) {
     return _dao.insertTable(
       GameTableCompanion.insert(name: name, categoryId: categoryId),
     );
-  }
-
-  Future<int> numberOfBusyTables() {
-    return _dao.numberOfBusyTables();
   }
 }

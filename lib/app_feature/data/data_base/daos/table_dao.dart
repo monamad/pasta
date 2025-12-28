@@ -4,15 +4,17 @@ part 'table_dao.g.dart';
 
 abstract class ITableDao {
   Future<List<GameTableData>> getAllTables();
-  Future<GameTableData?> getTableById(int id);
-  Future<List<GameTableData>> getTablesByCategory(int categoryId);
+  Future<String> getTableNameById(int id);
   Future<List<GameTableData>> getAvailableTablesByCategory(int categoryId);
-  Future<List<GameTableData>> getBusyTables();
-  Future<int> numberOfBusyTables();
+  Future<bool> getTableStatus(int tableId);
   Future<int> insertTable(GameTableCompanion entry);
+  Future<double> getTablePriceById(int id);
+  Future<GameTableData?> getTableById(int id);
+  Future<bool> updateTableStatus(int tableId);
+  Future<List<GameTableData>> getTablesByCategory(int categoryId);
 }
 
-@DriftAccessor(tables: [GameTable, Session])
+@DriftAccessor(tables: [GameTable, Category])
 class TableDao extends DatabaseAccessor<AppDatabase>
     with _$TableDaoMixin
     implements ITableDao {
@@ -26,59 +28,52 @@ class TableDao extends DatabaseAccessor<AppDatabase>
   Future<List<GameTableData>> getAllTables() => select(gameTable).get();
 
   @override
-  Future<GameTableData?> getTableById(int id) =>
-      (select(gameTable)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+  Future<String> getTableNameById(int id) =>
+      getTableById(id).then((table) => table!.name);
 
   @override
-  Future<List<GameTableData>> getTablesByCategory(int categoryId) => (select(
-    gameTable,
-  )..where((tbl) => tbl.categoryId.equals(categoryId))).get();
+  Future<double> getTablePriceById(int id) async {
+    int x = await getTableById(id).then((table) => table!.categoryId);
+    return await (select(category)..where((cat) => cat.id.equals(x)))
+        .getSingle()
+        .then((catRow) => catRow.pricePerHour);
+  }
 
   @override
   Future<List<GameTableData>> getAvailableTablesByCategory(
     int categoryId,
   ) async {
-    final query =
-        select(gameTable).join([
-            leftOuterJoin(
-              session,
-              session.tableId.equalsExp(gameTable.id) &
-                  session.actualEndTime.isNull(),
-            ),
-          ])
-          ..where(gameTable.categoryId.equals(categoryId))
-          ..where(session.id.isNull());
-
-    final results = await query.get();
-    return results.map((row) => row.readTable(gameTable)).toList();
+    return await (select(gameTable)..where(
+          (tbl) =>
+              tbl.isOccupied.equals(false) & tbl.categoryId.equals(categoryId),
+        ))
+        .get();
   }
 
   @override
-  Future<List<GameTableData>> getBusyTables() async {
-    final query = (select(gameTable)).join([
-      innerJoin(
-        session,
-        session.tableId.equalsExp(gameTable.id) &
-            session.actualEndTime.isNull(),
-      ),
-    ]);
-
-    final results = await query.get();
-    return results.map((row) => row.readTable(gameTable)).toList();
+  Future<List<GameTableData>> getTablesByCategory(int categoryId) async {
+    return await (select(
+      gameTable,
+    )..where((tbl) => tbl.categoryId.equals(categoryId))).get();
   }
 
   @override
-  Future<int> numberOfBusyTables() {
-    final query = selectOnly(gameTable)
-      ..addColumns([gameTable.id])
-      ..join([
-        innerJoin(
-          session,
-          session.tableId.equalsExp(gameTable.id) &
-              session.actualEndTime.isNull(),
-        ),
-      ]);
+  Future<bool> getTableStatus(int tableId) =>
+      getTableById(tableId).then((table) => table!.isOccupied);
+  @override
+  Future<GameTableData?> getTableById(int id) =>
+      (select(gameTable)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
 
-    return query.get().then((rows) => rows.length);
+  @override
+  Future<bool> updateTableStatus(int tableId) async {
+    final table = await getTableById(tableId);
+
+    final newStatus = !table!.isOccupied;
+
+    await (update(gameTable)..where((tbl) => tbl.id.equals(tableId))).write(
+      GameTableCompanion(isOccupied: Value(newStatus)),
+    );
+
+    return newStatus;
   }
 }

@@ -4,34 +4,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pasta/app_feature/data/data_base/app_database.dart';
 import 'package:pasta/app_feature/data/repos/category_repository.dart';
 import 'package:pasta/app_feature/data/repos/session_repository.dart';
-import 'package:pasta/app_feature/data/repos/table_repository.dart';
-import 'package:pasta/app_feature/data/session_model_with_details.dart';
+import 'package:pasta/app_feature/data/models/session_model_with_details.dart';
 
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  final TableRepository _tableRepository;
   final CategoryRepository _categoryRepository;
   final SessionRepository _sessionRepository;
-  HomeCubit(
-    this._tableRepository,
-    this._categoryRepository,
-    this._sessionRepository,
-  ) : super(HomeInitial());
+  HomeCubit(this._categoryRepository, this._sessionRepository)
+    : super(HomeInitial());
   Future<void> loadHomeData() async {
     emit(HomeLoading());
     try {
       final results = await Future.wait([
         _categoryRepository.getAll(),
-        _tableRepository.numberOfBusyTables(),
+        _sessionRepository.getRunningSessionCount(),
         _sessionRepository.getTotalTodayRevenue(),
-        _sessionRepository.getRunning(),
+        _sessionRepository.getRunningSessions(),
         _sessionRepository.getDoneSessions(),
+        _sessionRepository.getReservedSessions(),
       ]);
 
       final categories = results[0] as List<CategoryData>;
       final totalBusyTables = results[1] as int;
-
       emit(
         HomeLoaded(
           activeSessions: results[3] as List<SessionWithDetails>,
@@ -39,6 +34,7 @@ class HomeCubit extends Cubit<HomeState> {
           categories: categories,
           totalBusyTables: totalBusyTables,
           totalTodayRevenue: results[2] as double,
+          reservedSessions: results[5] as List<SessionWithDetails>,
         ),
       );
     } catch (e) {
@@ -59,7 +55,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (state is! HomeLoaded) return;
     emit(
       (state as HomeLoaded).copyWith(
-        totalBusyTables: await _tableRepository.numberOfBusyTables(),
+        totalBusyTables: await _sessionRepository.getRunningSessionCount(),
       ),
     );
   }
@@ -75,11 +71,22 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> getRunningSessions() async {
     if (state is! HomeLoaded) return;
-    final updatedSessions = await _sessionRepository.getRunning();
+    final updatedSessions = await _sessionRepository.getRunningSessions();
 
     emit(
       (state as HomeLoaded).copyWith(
         activeSessions: List.from(updatedSessions),
+      ),
+    );
+  }
+
+  Future<void> getReservedSessions() async {
+    if (state is! HomeLoaded) return;
+    final updatedSessions = await _sessionRepository.getReservedSessions();
+
+    emit(
+      (state as HomeLoaded).copyWith(
+        reservedSessions: List.from(updatedSessions),
       ),
     );
   }
@@ -99,6 +106,7 @@ class HomeCubit extends Cubit<HomeState> {
     await getTotalTodayRevenue();
     await getNumberOfBusyTables();
     await getDoneSessions();
+    await getReservedSessions();
   }
 
   Future<void> extendSession(int sessionId, int additionalMinutes) async {

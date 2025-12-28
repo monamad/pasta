@@ -12,6 +12,7 @@ import 'package:pasta/app_feature/logic/start_new_session/start_new_session_cubi
 import 'package:pasta/app_feature/presentation/home/view/active_sessions_view.dart';
 import 'package:pasta/app_feature/presentation/home/view/done_sessions_section_view.dart';
 import 'package:pasta/app_feature/presentation/home/view/home_view.dart';
+import 'package:pasta/app_feature/presentation/home/view/reserved_sessions_view.dart';
 import 'package:pasta/app_feature/presentation/notification/notification_view.dart';
 import 'package:pasta/app_feature/presentation/settings/settings_view.dart';
 import 'package:pasta/app_feature/presentation/start_new_session/view/start_new_session_view.dart';
@@ -25,7 +26,6 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => HomeCubit(
-              getIt<TableRepository>(),
               getIt<CategoryRepository>(),
               getIt<SessionRepository>(),
             )..loadHomeData(),
@@ -60,6 +60,12 @@ class AppRouter {
         final homeCubit = settings.arguments as HomeCubit;
         return MaterialPageRoute(
           builder: (_) => ActiveSessionsView(homeCubit: homeCubit),
+        );
+
+      case Routes.reservedSessions:
+        final homeCubit = settings.arguments as HomeCubit;
+        return MaterialPageRoute(
+          builder: (_) => ReservedSessionsView(homeCubit: homeCubit),
         );
       case Routes.doneSessionsView:
         final homeCubit = settings.arguments as HomeCubit;

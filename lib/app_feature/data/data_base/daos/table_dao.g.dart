@@ -6,5 +6,4 @@ part of 'table_dao.dart';
 mixin _$TableDaoMixin on DatabaseAccessor<AppDatabase> {
   $CategoryTable get category => attachedDatabase.category;
   $GameTableTable get gameTable => attachedDatabase.gameTable;
-  $SessionTable get session => attachedDatabase.session;
 }
