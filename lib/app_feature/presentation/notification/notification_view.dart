@@ -17,9 +17,29 @@ class _NotificationViewState extends State<NotificationView> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isBottom) {
+      context.read<NotificationCubit>().loadMore();
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9);
   }
 
   void _scrollToHighlighted(int index) {
@@ -72,9 +92,14 @@ class _NotificationViewState extends State<NotificationView> {
             return ListView.separated(
               controller: _scrollController,
               padding: EdgeInsets.all(16.w),
-              itemCount: doneSessions.length,
+              itemCount: doneSessions.length + (loadedState.hasMore ? 1 : 0),
               separatorBuilder: (context, index) => SizedBox(height: 12.h),
               itemBuilder: (context, index) {
+                // Show loading indicator at the bottom
+                if (index >= doneSessions.length) {
+                  return SizedBox();
+                }
+
                 final session = doneSessions[index];
                 final isHighlighted =
                     highlightId != null && session.session.id == highlightId;

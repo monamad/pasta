@@ -6,7 +6,7 @@ abstract class ISessionDao {
   Future<List<SessionData>> getAllsession();
   Future<SessionData?> getSessionById(int id);
   Future<List<SessionData>> getRunningSessions();
-  Future<List<SessionData>> getDoneSessions();
+  Future<List<SessionData>> getDoneSessions({int? limit, int? offset});
   Future<int> getRunningSessionCount();
   Future<List<SessionData>> getReservedSessions();
   Future<List<SessionData>> getActiveSessionsForTable(int tableId);
@@ -123,7 +123,6 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
 
   @override
   Future<int> getRunningSessionCount() async {
-    print(await getAllsession());
     final query = selectOnly(session)
       ..addColumns([session.id.count()])
       ..where(session.status.equals(SessionStatus.occupied.name));
@@ -133,11 +132,16 @@ class SessionDao extends DatabaseAccessor<AppDatabase>
   }
 
   @override
-  Future<List<SessionData>> getDoneSessions() {
-    return (select(session)
-          ..where((tbl) => tbl.status.equals(SessionStatus.done.name))
-          ..orderBy([(tbl) => OrderingTerm.desc(tbl.actualEndTime)]))
-        .get();
+  Future<List<SessionData>> getDoneSessions({int? limit, int? offset}) {
+    final query = select(session)
+      ..where((tbl) => tbl.status.equals(SessionStatus.done.name))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.actualEndTime)]);
+
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+
+    return query.get();
   }
 
   @override

@@ -48,16 +48,10 @@ class SessionRepository {
       throw ReservationConflictException(conflicts);
     }
 
-    // final running = await _tableDao.getTableStatus(tableId);
-
-    // if (running) {
-    //   throw Exception("Table is already occupied!");
-    // }
-
     int id = await _sessionDao.createNewSession(
       tableId: tableId,
       startTime: startTime,
-      expectedEndTime: durationHours != null ? expectedEndTime : null,
+      expectedEndTime: expectedEndTime,
       sessionStatus: sessionStatus,
     );
 
@@ -254,8 +248,14 @@ class SessionRepository {
     );
   }
 
-  Future<List<SessionWithDetails>> getDoneSessions() async {
-    final sessions = await _sessionDao.getDoneSessions();
+  Future<List<SessionWithDetails>> getDoneSessions({
+    int? limit,
+    int? offset,
+  }) async {
+    final sessions = await _sessionDao.getDoneSessions(
+      limit: limit,
+      offset: offset,
+    );
     return SessionWithDetails.fromSessions(sessions, _tableDao, _categoryDao);
   }
 

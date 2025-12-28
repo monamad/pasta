@@ -91,7 +91,6 @@ class StartNewSessionCubit extends Cubit<StartNewSessionState> {
       final message = e.conflicts.length == 1
           ? 'This table is already reserved:\\n$conflictMessages'
           : 'This table has ${e.conflicts.length} conflicting reservations:\\n$conflictMessages';
-      print('Emitting Submit Error with message: $message');
       emit(StartNewSessionSubmitError(message, availableTables, busyTables));
     } catch (e) {
       emit(

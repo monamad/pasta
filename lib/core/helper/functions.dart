@@ -45,26 +45,40 @@ double diffInHours(DateTime start, DateTime end) =>
 bool isTimeEqualByMinute(DateTime a, DateTime b) {
   return a.difference(b).inMinutes == 0;
 }
-  String formatTime(DateTime dateTime) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final month = months[dateTime.month - 1];
-    final day = dateTime.day;
-    final year = dateTime.year;
-    
-    int hour = dateTime.hour;
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    
-    if (hour > 12) {
-      hour -= 12;
-    } else if (hour == 0) {
-      hour = 12;
-    }
-    
-    return '$month $day, $year at $hour:$minute $period';
+
+String formatTime(DateTime dateTime) {
+  final months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  final month = months[dateTime.month - 1];
+  final day = dateTime.day;
+  final year = dateTime.year;
+
+  int hour = dateTime.hour;
+  final minute = dateTime.minute.toString().padLeft(2, '0');
+  final period = hour >= 12 ? 'PM' : 'AM';
+
+  if (hour > 12) {
+    hour -= 12;
+  } else if (hour == 0) {
+    hour = 12;
   }
 
-  DateTime removeMilliseconds(DateTime dateTime) {
+  return '$month $day, $year at $hour:$minute $period';
+}
+
+DateTime removeMilliseconds(DateTime dateTime) {
   return DateTime(
     dateTime.year,
     dateTime.month,
@@ -73,4 +87,23 @@ bool isTimeEqualByMinute(DateTime a, DateTime b) {
     dateTime.minute,
     dateTime.second,
   );
+}
+
+int binarySearch<T>(List<T> sortedList, int target) {
+  int left = 0;
+  int right = sortedList.length - 1;
+  while (left <= right) {
+    int mid = left + ((right - left) >> 1);
+    int midValue = (sortedList[mid] as dynamic).session.id;
+
+    if (midValue == target) {
+      return mid;
+    } else if (midValue < target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+
+  return -1;
 }
